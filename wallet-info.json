@@ -1,13 +1,13 @@
 {
-  "backend": {
-    "address": "rhAx8Mn1nWXCjAjPTcqecLgkGZ3wYiCatv",
-    "seed": "sEdSKTrY7q8hhJz6V3S3EHZTfFN8mwK"
+  "backendWallet": {
+    "address": "rDkXsUuFPNebinNG82MpH1dXYAVf5NCgsm",
+    "seed": "sEdVrGMNXVcibpnH7AEmtzjHsDgQXxU"
   },
-  "issuer": {
-    "address": "rwKwoavsSDyMCMH5qkvUZk1kREf5g512E5",
-    "seed": "sEdVdAyWWzVb5anUzWbff3Ro1XcXa1n"
+  "issuerWallet": {
+    "address": "rEe8oDQm7hcy95b7ZTjtg8NC91kBUy9MSK",
+    "seed": "sEdSLsAPzh3TyqVKhNSxPmm9xFTj6yp"
   },
-  "destination": {
+  "destinationWallet": {
     "address": "rNKB7zoaWiR1vacQDrvx1JKYzptjbiqnaE",
     "seed": "sEdSuAKpvahUG1bXHdmLdnH2vhF68Xi"
   }
