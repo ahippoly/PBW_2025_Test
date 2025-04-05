@@ -1,7 +1,7 @@
 import xrpl from 'xrpl'
 
 export interface LandMetadata {
-    nft_id: string
+    land_id: string
     gps: string
     ref_cad: string
     surface: number

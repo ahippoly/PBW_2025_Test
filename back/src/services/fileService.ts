@@ -6,7 +6,7 @@ import { readFile } from 'fs/promises'
 
 export async function generateOreContractPDF(data: LandMetadata): Promise<Buffer> {
   return new Promise((resolve, reject) => {
-    const fileName = `contrat-ORE-${data.nft_id}.pdf`
+    const fileName = `contrat-ORE-${data.land_id}.pdf`
     const filePath = path.join(__dirname, '../../public/contracts', fileName)
 
     const doc = new PDFDocument()
