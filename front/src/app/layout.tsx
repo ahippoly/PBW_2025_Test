@@ -24,8 +24,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" style={{ width: "100%", height: "100%" }}>
-      <body style={{ width: "100%", height: "100%" }}>{children}</body>
+    <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
+      <body className="min-h-screen flex flex-col bg-white">{children}</body>
     </html>
   );
 }
