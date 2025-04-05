@@ -1,0 +1,14 @@
+{
+  "name": "xrpl-token-app",
+  "version": "1.0.0",
+  "description": "Application to create a wallet, request test XRP, mint FST tokens, and send them on XRPL testnet",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "xrpl": "^2.7.0",
+    "dotenv": "^16.0.3",
+    "node-fetch": "^2.6.7"
+  }
+}

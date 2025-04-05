@@ -1,0 +1,14 @@
+{
+  "backend": {
+    "address": "rhAx8Mn1nWXCjAjPTcqecLgkGZ3wYiCatv",
+    "seed": "sEdSKTrY7q8hhJz6V3S3EHZTfFN8mwK"
+  },
+  "issuer": {
+    "address": "rwKwoavsSDyMCMH5qkvUZk1kREf5g512E5",
+    "seed": "sEdVdAyWWzVb5anUzWbff3Ro1XcXa1n"
+  },
+  "destination": {
+    "address": "rNKB7zoaWiR1vacQDrvx1JKYzptjbiqnaE",
+    "seed": "sEdSuAKpvahUG1bXHdmLdnH2vhF68Xi"
+  }
+}
