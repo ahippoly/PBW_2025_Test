@@ -1,10 +1,8 @@
 import axios from 'axios'
 import dotenv from 'dotenv'
-
+import FormData from 'form-data'
 
 dotenv.config()
-
-
 
 export async function uploadToIPFS(landMetadata : object, fileName: string): Promise<string> {
   try {
@@ -42,13 +40,20 @@ export async function uploadToIPFSFile(file: Buffer, fileName: string): Promise<
   try {
     console.log('📦 Uploading file to Pinata...')
     console.log('📦 File name :', fileName)
+
+    const formData = new FormData()
+    formData.append('file', file, {
+      filename: fileName,
+      contentType: 'application/pdf'
+    })
+
     const res = await axios.post(
       'https://api.pinata.cloud/pinning/pinFileToIPFS',
-      file,
+      formData,
       {
         headers: {
+          ...formData.getHeaders(),
           Authorization: `Bearer ${process.env.PINATA_JWT!}`,
-          'Content-Type': 'application/json'
         }
       }
     )

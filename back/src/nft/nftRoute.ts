@@ -1,10 +1,9 @@
 import express from 'express'
-import { mintNFT, testFile } from './nft'
+import { mintNFT, fetchNFTs } from './nft'
 
 const router = express.Router()
 
 router.post('/create', mintNFT)
-
-router.post("/test", testFile)
+router.get('/fetch', fetchNFTs)
 
 export default router
