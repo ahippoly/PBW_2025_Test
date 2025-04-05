@@ -1,23 +1,13 @@
 import { Request, Response } from 'express'
-import { uploadToIPFS, uploadToIPFSFile } from '../services/ipfsService'
+import { uploadToIPFS, uploadToIPFSFile, getJSONFromIPFS } from '../services/ipfsService'
 import { generateOreContractPDF } from '../services/fileService'
 import * as xrpl from "xrpl"
 import crypto from 'crypto'
-import { create } from 'ipfs-http-client/dist/src'
+import { extractNFTokenID, getNFTInfo, LandMetadata, getSellInformation } from './nftUtils'
+import axios  from 'axios'
 
 const XRPL_NODE = "wss://s.altnet.rippletest.net:51233"
 const TAXON = 1338
-
-export interface LandMetadata {
-  nft_id: string
-  gps: string
-  ref_cad: string
-  surface: number
-  owner: string
-  platform: string,
-  contract_uri?: string
-}
-
 
 const createNFT = async (gps: string, surface: number, owner: string, terrain_id: string, ref_cad: string): Promise<string> => {
   try {
@@ -62,7 +52,7 @@ export const createOffer =  async (seed : string, token_id : string, price : str
       Account: classicAddress,
       NFTokenID: token_id,
       Amount: price,
-      Flags: 0,
+      Flags: 1,
     }
 
     const prepared = await client.autofill(tx)
@@ -76,32 +66,7 @@ export const createOffer =  async (seed : string, token_id : string, price : str
 }
 
 
-function extractNFTokenID(meta: any): string | undefined {
-  const affectedNodes = meta.AffectedNodes
 
-  for (const node of affectedNodes) {
-    const created = node.CreatedNode
-    if (
-      created?.LedgerEntryType === 'NFTokenPage' &&
-      created.NewFields?.NFTokens?.length
-    ) {
-      return created.NewFields.NFTokens[0].NFToken.NFTokenID
-    }
-  }
-
-  for (const node of affectedNodes) {
-    const modified = node.ModifiedNode
-    if (
-      modified?.LedgerEntryType === 'NFTokenPage' &&
-      modified.FinalFields?.NFTokens?.length
-    ) {
-      const last = modified.FinalFields.NFTokens.at(-1)
-      return last?.NFToken?.NFTokenID
-    }
-  }
-
-  return undefined
-}
 
 export const mintNFT = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -164,33 +129,6 @@ export const mintNFT = async (req: Request, res: Response): Promise<void> => {
     }
 }
 
-export const testFile = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const terrain_id = `T-${crypto.randomUUID()}`
-
-    const terrain : LandMetadata = {
-      nft_id: terrain_id,
-      gps: "48.8566,2.3522",
-      ref_cad: "123456789",
-      surface: 2.3,
-      owner: "test",
-      platform: "GreenLock"
-    }
-    const buffer = await generateOreContractPDF(terrain)
-    console.log("✅ PDF généré avec succès :", buffer)
-    const fileName = `contrat-ORE-${terrain.nft_id}.pdf`
-
-    const fileUri = await uploadToIPFSFile(buffer, fileName)
-    console.log("✅ PDF uploadé sur IPFS avec succès :", fileUri)
-    res.status(200).json({ message: 'PDF file uploaded successfully', fileUri })
-    return
-  } catch (error) {
-      console.error("❌ Erreur lors de la création de l'NFT :", error)
-      res.status(500).json({ error: 'failed to create PDF' })
-      return
-    }
-}
-
 // Example usage
 /*curl --location 'http://localhost:3000/nft/create' \
 --header 'Content-Type: application/json' \
@@ -222,23 +160,69 @@ export const fetchNFTs = async (req: Request, res: Response): Promise<void> => {
 
     console.log("✅ Transactions mintées récupérées avec succès :", minted)
 
-    const mintedNFTIds = minted.map(tx => {
-      return xrpl.getNFTokenID(tx.meta)
-    })
+    const mintedNFTIds: string[] = []
+
+    for (const tx of minted) {
+      const id = xrpl.getNFTokenID(tx.meta);
+      if (!id) {
+        console.log("❌ ID non trouvé dans la transaction :", tx)
+        continue
+      }
+      mintedNFTIds.push(id);
+    }
 
     const cleanIds = mintedNFTIds.filter((id): id is string => typeof id === 'string')
 
+    const nftInfos: (LandMetadata | null)[] = []
 
-    console.log("✅ NFTs mintés récupérés avec succès :", mintedNFTIds)
+    for (const id of cleanIds) {
+      const result = await getNFTInfo(id)
+      if (!result) {
+        console.log("❌ Résultat non trouvé pour le NFT ID :", id)
+        continue
+      }
 
+      const decodedUri = Buffer.from(result.uri, 'hex').toString('utf-8');
+      console.log('✅ URI décodée:', decodedUri);
+
+      if (!decodedUri) {
+        console.log("❌ URI non trouvée pour le NFT ID :", id)
+        continue
+      }
+      try {
+        const nftJsonInfo = await getJSONFromIPFS(decodedUri)
+        if (!nftJsonInfo) {
+          console.log("❌ JSON non trouvé pour le NFT ID :", id)
+          continue
+        }
+
+        console.log("✅ JSON récupéré avec succès :", nftJsonInfo)
+        const sellInfo = await getSellInformation(id, client)
+       
+        nftJsonInfo.forSale = sellInfo.forSale
+        nftJsonInfo.price = sellInfo.price
+        nftJsonInfo.owner = sellInfo.owner
+        
+
+        nftInfos.push(nftJsonInfo)
+      } catch (error) {
+        if (axios.isAxiosError(error) && error.response?.status === 403) {
+          console.warn('⚠️ Accès refusé (403), on ignore cette requête.')
+        }
+        else {
+          console.error('❌ Erreur lors de la récupération du JSON depuis IPFS :', error)
+        }
+      }
+    }
     
     await client.disconnect()
+
+    res.status(200).json({ nfts: nftInfos.filter((nft): nft is LandMetadata => nft !== null) })
     
     
   } catch (error) {
       console.error("❌ Erreur lors de la récupération des NFTs :", error)
       res.status(500).json({ error: 'Failed to fetch NFTs' })
-      return
     }
 }
 
@@ -278,8 +262,9 @@ export const buyNFT = async (req: Request, res: Response): Promise<void> => {
 /*curl --location 'http://localhost:3000/nft/buy' \
 --header 'Content-Type: application/json' \
 --data '{
-  seed: "sEdTWKML7kvEVgVmgZW6MiHqGgTaFkq",
-  token_id: "000800009209DF7E04213C14E9AC90E72AD8D6AC8B18403CF8C04CED005F443C",
-  price: "1000000",
-  owner: "rNKB7zoaWiR1vacQDrvx1JKYzptjbiqnaE"
-}'*/
+  "seed": "sEdTWKML7kvEVgVmgZW6MiHqGgTaFkq",
+  "token_id": "000800009209DF7E04213C14E9AC90E72AD8D6AC8B18403CF8C04CED005F443C",
+  "price": "1000000",
+  "owner": "rNKB7zoaWiR1vacQDrvx1JKYzptjbiqnaE"
+}' */
+

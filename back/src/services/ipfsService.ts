@@ -68,3 +68,22 @@ export async function uploadToIPFSFile(file: Buffer, fileName: string): Promise<
     throw error
   }
 }
+
+export async function getJSONFromIPFS(ipfsUri: string): Promise<any> {
+  try {
+    const gateway = process.env.GATEWAY_URL
+    
+    if (!ipfsUri.startsWith("ipfs://")) {
+      throw new Error(`L'URI IPFS est invalide : ${ipfsUri}`)
+    }
+
+    const ipfsUriSplit = ipfsUri.split("ipfs://")[1]
+    const cid = ipfsUriSplit.split('/')[0]
+    const url = `https://${gateway}/ipfs/${cid}`
+
+    const res = await axios.get(url)
+    return res.data
+  } catch (error) {
+    throw error
+  }
+}

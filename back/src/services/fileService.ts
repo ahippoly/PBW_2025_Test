@@ -1,7 +1,7 @@
 import PDFDocument from 'pdfkit'
 import fs from 'fs'
 import path from 'path'
-import { LandMetadata } from '../nft/nft'
+import { LandMetadata } from '../nft/nftUtils'
 import { readFile } from 'fs/promises'
 
 export async function generateOreContractPDF(data: LandMetadata): Promise<Buffer> {
