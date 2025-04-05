@@ -17,10 +17,27 @@
         bottom: 0;
         width: 100%;
       }
+      .map-popup {
+        background: white;
+        border-radius: 4px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        padding: 10px;
+        max-width: 300px;
+        font-family: Arial, sans-serif;
+        font-size: 12px;
+        pointer-events: none;
+        position: absolute;
+        z-index: 9999;
+        display: none;
+      }
+      .map-popup p {
+        margin: 5px 0;
+      }
     </style>
   </head>
   <body>
     <div id="map"></div>
+    <div id="parcel-popup" class="map-popup"></div>
     <script>
       maptilersdk.config.apiKey = "W7xopEmw2mElS3mfUm3N";
       var map = new maptilersdk.Map({
@@ -43,10 +60,79 @@
           source: "cadastre",
           "source-layer": "parcelles",
           paint: {
-            "fill-color": "#0080ff",
+            "fill-color": "#0080aa",
             "fill-opacity": 0.5,
             "fill-outline-color": "#000000",
           },
+        });
+
+        // Add hover effect with highlighted color
+        map.addLayer({
+          id: "cadastre-parcels-highlighted",
+          type: "fill",
+          source: "cadastre",
+          "source-layer": "parcelles",
+          paint: {
+            "fill-color": "#aaaaaa",
+            "fill-opacity": 0.7,
+            "fill-outline-color": "#000000",
+          },
+          filter: ["==", "id", ""],
+        });
+
+        // Create popup object for displaying parcel information
+        const popup = document.getElementById("parcel-popup");
+
+        // Variable to track the currently highlighted feature
+        let hoveredParcelId = null;
+
+        // Mouse move event to handle hover interactions
+        map.on("mousemove", "cadastre-parcels", (e) => {
+          // Change cursor style on hover
+          map.getCanvas().style.cursor = "pointer";
+
+          // Get properties of the hovered feature
+          const features = map.queryRenderedFeatures(e.point, {
+            layers: ["cadastre-parcels"],
+          });
+
+          if (features.length > 0) {
+            const feature = features[0];
+            const props = feature.properties;
+
+            // Update hover state
+            if (hoveredParcelId !== props.id) {
+              // Remove highlight from previous feature
+              if (hoveredParcelId) {
+                map.setFilter("cadastre-parcels-highlighted", ["==", "id", ""]);
+              }
+
+              // Add highlight to current feature
+              hoveredParcelId = props.id;
+              map.setFilter("cadastre-parcels-highlighted", ["==", "id", hoveredParcelId]);
+
+              // Update popup content with parcel information
+              let popupContent = "";
+              for (const key in props) {
+                if (props.hasOwnProperty(key)) {
+                  popupContent += `<p><strong>${key}:</strong> ${props[key]}</p>`;
+                }
+              }
+
+              popup.innerHTML = popupContent;
+              popup.style.display = "block";
+              popup.style.left = e.point.x + 10 + "px";
+              popup.style.top = e.point.y + 10 + "px";
+            }
+          }
+        });
+
+        // Handle mouse leave events
+        map.on("mouseleave", "cadastre-parcels", () => {
+          map.getCanvas().style.cursor = "";
+          popup.style.display = "none";
+          hoveredParcelId = null;
+          map.setFilter("cadastre-parcels-highlighted", ["==", "id", ""]);
         });
 
         // Add parcel outlines for better visibility
