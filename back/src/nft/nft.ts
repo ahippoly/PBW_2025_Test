@@ -78,21 +78,30 @@ export const createOffer =  async (seed : string, token_id : string, price : str
 
 function extractNFTokenID(meta: any): string | undefined {
   const affectedNodes = meta.AffectedNodes
+
   for (const node of affectedNodes) {
     const created = node.CreatedNode
     if (
       created?.LedgerEntryType === 'NFTokenPage' &&
-      created?.NewFields?.NFTokens
+      created.NewFields?.NFTokens?.length
     ) {
-      const nftokens = created.NewFields.NFTokens
-      if (nftokens.length > 0) {
-        return nftokens[0].NFToken.NFTokenID
-      }
+      return created.NewFields.NFTokens[0].NFToken.NFTokenID
     }
   }
+
+  for (const node of affectedNodes) {
+    const modified = node.ModifiedNode
+    if (
+      modified?.LedgerEntryType === 'NFTokenPage' &&
+      modified.FinalFields?.NFTokens?.length
+    ) {
+      const last = modified.FinalFields.NFTokens.at(-1)
+      return last?.NFToken?.NFTokenID
+    }
+  }
+
   return undefined
 }
-
 
 export const mintNFT = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -189,7 +198,8 @@ export const testFile = async (req: Request, res: Response): Promise<void> => {
   "gps": "48.8566,2.3522",
   "surface_ha": 2.3,
   "seed": "sEdSuAKpvahUG1bXHdmLdnH2vhF68Xi",
-  "ref_cad": "123456789"
+  "ref_cad": "123456789",
+  "price": "1000000"
 }'*/
 
 
@@ -234,7 +244,7 @@ export const fetchNFTs = async (req: Request, res: Response): Promise<void> => {
 
 export const buyNFT = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { seed, token_id, price } = req.body
+    const { seed, token_id, price, owner } = req.body
 
     const client = new xrpl.Client(XRPL_NODE)
     await client.connect()
@@ -247,6 +257,7 @@ export const buyNFT = async (req: Request, res: Response): Promise<void> => {
       Account: classicAddress,
       NFTokenID: token_id,
       Amount: price,
+      Owner: owner,
       Flags: 0,
     }
 
@@ -262,3 +273,13 @@ export const buyNFT = async (req: Request, res: Response): Promise<void> => {
       return
     }
 }
+
+// Example usage
+/*curl --location 'http://localhost:3000/nft/buy' \
+--header 'Content-Type: application/json' \
+--data '{
+  seed: "sEdTWKML7kvEVgVmgZW6MiHqGgTaFkq",
+  token_id: "000800009209DF7E04213C14E9AC90E72AD8D6AC8B18403CF8C04CED005F443C",
+  price: "1000000",
+  owner: "rNKB7zoaWiR1vacQDrvx1JKYzptjbiqnaE"
+}'*/
