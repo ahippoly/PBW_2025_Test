@@ -20,6 +20,9 @@ import { mapIdsToLock } from "@/data/mapIdsToLock";
 import { tempAddressXRPL } from "@/data/tempAddressXRPL";
 import { CardContent, CardTitle } from "@/components/ui/card";
 import { CardHeader } from "@/components/ui/card";
+import { useParcelStore } from "@/store/ParcelStore";
+import { useWalletStore } from "@/store/WalletStore";
+import { mintNewNFT } from "@/functions/gemwallet";
 
 interface MintAlertDialogProps {
   greenLockDuration: number;
@@ -28,12 +31,32 @@ interface MintAlertDialogProps {
 export function MintAlertDialog({ greenLockDuration }: MintAlertDialogProps) {
   const [loadingMint, setLoadingMint] = useState(false);
   const [success, setSuccess] = useState<boolean | undefined>(undefined);
-  const handleMint = () => {
+  const { selectedParcel } = useParcelStore();
+  const { address } = useWalletStore();
+  const handleMint = async () => {
+    if (!address) {
+      console.error("No address found");
+      return;
+    }
+
+    if (!selectedParcel) {
+      console.error("No parcel selected");
+      return;
+    }
+
+    await mintNewNFT({
+      gps: selectedParcel.mapTillerId,
+      surface: 102,
+      ref_cad: selectedParcel.mapTillerId,
+      price: "0",
+      address: address,
+    });
+
     setLoadingMint(true);
     setTimeout(() => {
       setLoadingMint(false);
       setSuccess(true);
-      generateAndAddParcel(tempAddressXRPL, mapIdsToLock[0]);
+      generateAndAddParcel(address, selectedParcel.mapTillerId);
     }, 1000);
   };
 

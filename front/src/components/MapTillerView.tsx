@@ -19,7 +19,7 @@ interface MapViewProps {
 
 const ParcelColorPerType = {
   minted: "#90EE90",
-  mintable: "#808080",
+  // mintable: "#808080",
   minted_buyable: "#006400",
   invalid: "#ff0000",
   my: "#1E90FF",

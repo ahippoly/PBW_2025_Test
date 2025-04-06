@@ -1,7 +1,7 @@
 "use client";
 
 import MapTillerView from "@/components/MapTillerView";
-import Navbar from "@/components/Navbar";
+import Navbar from "@/components/NavBar/Navbar";
 import ParcelInfo from "@/components/ParcelFrame/ParcelInfo";
 import { useState, useMemo, useEffect } from "react";
 import { useParcelStore } from "@/store/ParcelStore";
@@ -9,20 +9,19 @@ import { tempAddressXRPL } from "@/data/tempAddressXRPL";
 
 function MapPage() {
   const MAP_TILLER_TOKEN: string = process.env.NEXT_PUBLIC_MAPTILLER_API_KEY || "your_mapbox_access_token_here";
-  const [selectedMapTillerId, setSelectedMapTillerId] = useState<string | null>(null);
 
-  const { parcels, selectedParcel: storeSelectedParcel, selectParcel } = useParcelStore();
-
-  const selectedParcel = useMemo(() => parcels.find((parcel) => parcel.mapTillerId === selectedMapTillerId), [parcels, selectedMapTillerId]);
+  const { parcels, selectMapTillerId, selectedParcel, selectedMapTillerId } = useParcelStore();
 
   // Update store's selected parcel when MapTiller ID changes
   useEffect(() => {
-    if (selectedParcel) {
-      selectParcel(selectedParcel.id);
-    } else {
-      selectParcel(null);
+    selectMapTillerId(selectedMapTillerId);
+  }, [selectedMapTillerId]);
+
+  useEffect(() => {
+    if (selectedParcel && selectedParcel.mapTillerId !== selectedMapTillerId) {
+      selectMapTillerId(selectedParcel.mapTillerId);
     }
-  }, [selectedParcel, selectParcel]);
+  }, [selectedParcel]);
 
   console.log("🚀 ~ MapPage ~ selectedMapTillerId:", selectedMapTillerId);
   console.log("🚀 ~ MapPage ~ selectedParcel:", selectedParcel);
@@ -34,7 +33,7 @@ function MapPage() {
         <div className="w-[60%] h-full z-10 drop-shadow-[0px_5px_10px_rgba(0,0,0,0.3)]">
           <MapTillerView
             selectedMapTillerId={selectedMapTillerId}
-            onMapTillerIdSelect={setSelectedMapTillerId}
+            onMapTillerIdSelect={selectMapTillerId}
             apiKey={MAP_TILLER_TOKEN}
             parcels={parcels}
             userAddress={tempAddressXRPL}
@@ -48,7 +47,7 @@ function MapPage() {
             <div className="absolute -inset-[50%] bg-[radial-gradient(circle_at_50%_50%,rgba(187,247,208,0.2),transparent_35%)] animate-blob-slow animation-delay-4000"></div>
           </div>
           <div className="relative z-10 w-full h-full flex justify-center items-center">
-            <ParcelInfo parcel={selectedParcel} />
+            <ParcelInfo parcel={selectedParcel || undefined} />
           </div>
         </div>
       </div>

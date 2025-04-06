@@ -1,20 +1,19 @@
-import express from 'express';
-import dotenv from "dotenv"
-import nftRoutes from './nft/nftRoute'
-import cors from 'cors'
+import express from "express";
+import dotenv from "dotenv";
+import nftRoutes from "./nft/nftRoute";
+import cors from "cors";
 
-dotenv.config()
-
+dotenv.config();
 
 const app = express();
 app.use(cors());
-const PORT = 3000;
+const PORT = process.env.PORT || 8080;
 
 app.use(express.json());
 
-app.use('/nft', nftRoutes)
+app.use("/nft", nftRoutes);
 
-app.get('/', (_req, res) => {
+app.get("/", (_req, res) => {
   res.send("🌿 l'API est en ligne !");
 });
 

@@ -7,6 +7,7 @@ import { devtools } from "zustand/middleware";
 interface ParcelState {
   parcels: Parcel[];
   selectedParcel: Parcel | null;
+  selectedMapTillerId: string | null;
   parcelIndex: number;
   loading: boolean;
   error: string | null;
@@ -16,7 +17,7 @@ interface ParcelState {
   addParcel: (parcel: Parcel) => void;
   updateParcel: (parcel: Parcel) => void;
   deleteParcel: (id: string) => void;
-  selectParcel: (id: string | null) => void;
+  selectMapTillerId: (mapTillerId: string | null) => void;
   setParcelIndex: (index: number) => void;
   incrementParcelIndex: () => void;
   decrementParcelIndex: () => void;
@@ -52,9 +53,10 @@ export const useParcelStore = create<ParcelState>()(
           selectedParcel: state.selectedParcel?.id === id ? null : state.selectedParcel,
         })),
 
-      selectParcel: (id) =>
+      selectMapTillerId: (mapTillerId) =>
         set((state) => ({
-          selectedParcel: id ? state.parcels.find((parcel) => parcel.id === id) || null : null,
+          selectedMapTillerId: mapTillerId,
+          selectedParcel: mapTillerId ? state.parcels.find((parcel) => parcel.mapTillerId === mapTillerId) || null : null,
         })),
 
       setParcelIndex: (index) => set({ parcelIndex: index }),

@@ -7,6 +7,7 @@ import MintableParcelContent from "./MintableParcelContent";
 import InvalidParcelContent from "./InvalidParcelContent";
 import { tempAddressXRPL } from "@/data/tempAddressXRPL";
 import MyParcelContent from "./My/MyParcelContent";
+import NoParcelUploadContent from "./NoParcel/NoParcelUploadContent";
 
 interface ParcelInfoProps {
   parcel: Parcel | undefined;
@@ -26,7 +27,7 @@ const getDisplayContent = (parcel: Parcel | undefined) => {
   }
 
   if (parcel.type == "mintable") {
-    return <MintableParcelContent parcel={parcel} />;
+    return <NoParcelUploadContent parcel={parcel} />;
   }
 
   if (parcel.type == "invalid") {

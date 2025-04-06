@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@gemwallet/api':
+        specifier: ^3.8.0
+        version: 3.8.0
       '@maptiler/sdk':
         specifier: ^3.0.3
         version: 3.0.3
@@ -184,6 +187,9 @@ packages:
   '@ethereumjs/util@9.1.0':
     resolution: {integrity: sha512-XBEKsYqLGXLah9PNJbgdkigthkG7TAGvlD/sH12beMXEyHDyigfcbdvHhmLyDWgDyOJn4QwiQUaF7yeuhnjdog==}
     engines: {node: '>=18'}
+
+  '@gemwallet/api@3.8.0':
+    resolution: {integrity: sha512-hZ6XC0mVm3Q54cgonrzk6tHS/wUMjtPHyqsqbtlnNGPouCR7OIfEDo5Y802qLZ5ah6PskhsK0DouVnwUykEM8Q==}
 
   '@humanfs/core@0.19.1':
     resolution: {integrity: sha512-5DyQ4+1JEUzejeK1JGICcideyfUbGixgS9jNgex5nqkW+cY7WZhxBigmieN5Qnw9ZosSNVC9KQKyb+GUaGyKUA==}
@@ -2873,6 +2879,8 @@ snapshots:
     dependencies:
       '@ethereumjs/rlp': 5.0.2
       ethereum-cryptography: 2.2.1
+
+  '@gemwallet/api@3.8.0': {}
 
   '@humanfs/core@0.19.1': {}
 
