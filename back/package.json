@@ -13,6 +13,7 @@
   "dependencies": {
     "axios": "^1.8.4",
     "buffer": "^6.0.3",
+    "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^5.1.0",
     "fetch-blob": "^4.0.0",
@@ -22,6 +23,7 @@
     "web3.storage": "^4.5.5"
   },
   "devDependencies": {
+    "@types/cors": "^2.8.17",
     "@types/express": "^5.0.1",
     "@types/pdfkit": "^0.13.9",
     "ts-node-dev": "^2.0.0",

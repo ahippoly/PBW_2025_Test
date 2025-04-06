@@ -3,8 +3,11 @@ import { uploadToIPFS, uploadToIPFSFile, getJSONFromIPFS } from '../services/ipf
 import { generateOreContractPDF } from '../services/fileService'
 import * as xrpl from "xrpl"
 import crypto from 'crypto'
-import { extractNFTokenID, getNFTInfo, LandMetadata, getSellInformation } from './nftUtils'
+import { extractNFTokenID, getNFTInfo, LandMetadata, getSellInformation} from './nftUtils'
 import axios  from 'axios'
+import dotenv from 'dotenv'
+
+dotenv.config()
 
 const XRPL_NODE = "wss://s.altnet.rippletest.net:51233"
 const TAXON = 1338
@@ -12,13 +15,13 @@ const TAXON = 1338
 const createNFT = async (gps: string, surface: number, owner: string, terrain_id: string, ref_cad: string): Promise<string> => {
   try {
     
-
     const landMetadata : LandMetadata = {
       "land_id" : terrain_id,
       "gps": gps,
       "ref_cad": ref_cad,
       "surface": surface,
       "owner": owner,
+      "mint_date": new Date().toISOString(),
       "platform" : "GreenLock"
   }
     const fileName = `contrat-ORE-${terrain_id}.pdf`
@@ -38,27 +41,24 @@ const createNFT = async (gps: string, surface: number, owner: string, terrain_id
   }
 }
 
-export const createOffer =  async (seed : string, token_id : string, price : string): Promise<void> => {
+export const createOffer = async (req: Request, res: Response): Promise<void> => {
   try {
+    const { token_id, price, address } = req.body
+
     const client = new xrpl.Client(XRPL_NODE)
 
     await client.connect()
 
-    const wallet = xrpl.Wallet.fromSeed(seed)
-    const classicAddress = wallet.classicAddress
-
     const tx: xrpl.NFTokenCreateOffer = {
       TransactionType: "NFTokenCreateOffer",
-      Account: classicAddress,
+      Account: address,
       NFTokenID: token_id,
       Amount: price,
       Flags: 1,
     }
 
-    const prepared = await client.autofill(tx)
-    const signed = wallet.sign(prepared)
-    const result = await client.submitAndWait(signed.tx_blob)
-    console.log("✅ Offre créée avec succès :", result)
+    //const prepared = await client.autofill(tx)
+    
     await client.disconnect()
   } catch (error) {
     console.error("❌ Erreur lors de la création de l'offre :", error)
@@ -66,21 +66,30 @@ export const createOffer =  async (seed : string, token_id : string, price : str
 }
 
 
-
+export function extractOfferID(meta: any): string | undefined {
+  const nodes = meta.AffectedNodes;
+  for (const node of nodes) {
+    const created = node.CreatedNode;
+    if (created?.LedgerEntryType === "NFTokenOffer") {
+      return created.LedgerIndex;
+    }
+  }
+  return undefined;
+}
 
 export const mintNFT = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { gps, surface_ha, seed, ref_cad, price} = req.body
+    const { gps, surface, ref_cad, price, address } = req.body
 
     const terrain_id = `T-${crypto.randomUUID()}`
 
     const client = new xrpl.Client(XRPL_NODE)
     await client.connect()
 
-    const wallet = xrpl.Wallet.fromSeed(seed)
+    const wallet = xrpl.Wallet.fromSeed(process.env.SECRET_KEY!)
     const classicAddress = wallet.classicAddress
 
-    const ipfsUri = await createNFT(gps, surface_ha, classicAddress, terrain_id, ref_cad)
+    const ipfsUri = await createNFT(gps, surface, address, terrain_id, ref_cad)
 
     const tx: xrpl.NFTokenMint = {
       TransactionType: "NFTokenMint",
@@ -115,12 +124,30 @@ export const mintNFT = async (req: Request, res: Response): Promise<void> => {
     }
     console.log("✅ Token ID extrait avec succès :", tokenId)
 
-    // Create an offer for the NFT
-    createOffer(seed, tokenId, price)
-    console.log("✅ Offre créée avec succès :", result)
+  
+      const txOffer: xrpl.NFTokenCreateOffer = {
+        TransactionType: "NFTokenCreateOffer",
+        Account: wallet.classicAddress,
+        NFTokenID: tokenId,
+        Destination: address,
+        Amount: "0",
+        Flags: 1,
+      };
+  
+      const preparedOffer = await client.autofill(txOffer);
+      const signedOffer = wallet.sign(preparedOffer);
+      const resultOffer = await client.submitAndWait(signedOffer.tx_blob);
+
+      const offerID = extractOfferID(resultOffer.result.meta);
+      if (!offerID) {
+        throw new Error("Offer ID not found in the transaction result");
+      }
+      console.log("✅ Offer ID extrait avec succès :", offerID);
 
     // Send the response  
-    res.status(200).json({ message: 'NFT minted successfully', result })
+    res.status(200).json({ tokenId,
+      offerID,
+      result: resultOffer})
     await client.disconnect()
   } catch (error) {
       console.error("❌ Erreur lors de la création de l'NFT :", error)
@@ -147,6 +174,8 @@ export const fetchNFT = async (req: Request, res: Response): Promise<void> => {
     await client.connect()  
 
     const result = await getNFTInfo(token_id)
+    console.log("✅ NFT info récupéré avec succès :", result)
+
     if (!result) {
       console.log("❌ Résultat non trouvé pour le NFT ID :", token_id)
       res.status(404).json({ error: 'NFT not found' })
@@ -278,35 +307,56 @@ export const fetchNFTs = async (req: Request, res: Response): Promise<void> => {
 
 export const buyNFT = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { seed, token_id, price, owner } = req.body
+    const { nft_id } = req.body
+
+    console.log("📦 NFT ID :", nft_id)
 
     const client = new xrpl.Client(XRPL_NODE)
     await client.connect()
 
-    const wallet = xrpl.Wallet.fromSeed(seed)
-    const classicAddress = wallet.classicAddress
-
-    const tx: xrpl.NFTokenCreateOffer = {
-      TransactionType: "NFTokenCreateOffer",
-      Account: classicAddress,
-      NFTokenID: token_id,
-      Amount: price,
-      Owner: owner,
-      Flags: 0,
+     const result = await client.request({
+          command: "nft_sell_offers",
+          nft_id : nft_id
+        })
+      console.log("📦 Réponse Clio:\n", JSON.stringify(result, null, 2))
+    
+    const offer = result.result.offers[0]
+    if (!offer) {
+      console.log("❌ Offre non trouvée pour le NFT ID :", nft_id)
+      res.status(500).json({ error: 'NFT not found' })
+      return
+    } else {
+      console.log("✅ Offre trouvée pour le NFT ID :", nft_id)
+      res.status(200).json({ offer : offer.nft_offer_index })
     }
 
-    const prepared = await client.autofill(tx)
-    const signed = wallet.sign(prepared)
-    const result = await client.submitAndWait(signed.tx_blob)
-    console.log("✅ NFT acheté avec succès :", result)
-    res.status(200).json({ message: 'NFT bought successfully', result })
-    await client.disconnect()
   } catch (error) {
       console.error("❌ Erreur lors de l'achat de l'NFT :", error)
       res.status(500).json({ error: 'Failed to buy NFT' })
       return
     }
 }
+
+export const acceptOffer = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { transaction } = req.body
+    const client = new xrpl.Client(XRPL_NODE)
+    await client.connect()
+
+    const tx_blob = xrpl.encode(transaction);
+
+    const submitResult = await client.submitAndWait(tx_blob)
+    console.log("✅ Offre acceptée avec succès :", submitResult)
+    res.status(200).json({ message: 'Offer accepted successfully', result: submitResult })
+    await client.disconnect()
+  } catch (error) {
+      console.error("❌ Erreur lors de l'acceptation de l'offre :", error)
+      res.status(500).json({ error: 'Failed to accept offer' })
+      return
+    }
+}
+    
+
 
 // Example usage
 /*curl --location 'http://localhost:3000/nft/buy' \
