@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Dialog,
   DialogClose,
@@ -16,6 +18,8 @@ import SpinningLoader from "../../../components/SpinningLoader";
 import { generateAndAddParcel } from "@/functions/generateParcel";
 import { mapIdsToLock } from "@/data/mapIdsToLock";
 import { tempAddressXRPL } from "@/data/tempAddressXRPL";
+import { CardContent, CardTitle } from "@/components/ui/card";
+import { CardHeader } from "@/components/ui/card";
 
 interface MintAlertDialogProps {
   greenLockDuration: number;
@@ -23,20 +27,37 @@ interface MintAlertDialogProps {
 
 export function MintAlertDialog({ greenLockDuration }: MintAlertDialogProps) {
   const [loadingMint, setLoadingMint] = useState(false);
-
+  const [success, setSuccess] = useState<boolean | undefined>(undefined);
   const handleMint = () => {
     setLoadingMint(true);
     setTimeout(() => {
       setLoadingMint(false);
+      setSuccess(true);
       generateAndAddParcel(tempAddressXRPL, mapIdsToLock[0]);
-    }, 3000);
+    }, 1000);
   };
 
-  return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button className="w-full mt-2 py-6 text-lg font-semibold bg-green-600 hover:bg-green-700">Green lock for {greenLockDuration} years !</Button>
-      </DialogTrigger>
+  const successContent = (
+    <>
+      <DialogContent className="bg-green-50 border-2 border-green-200">
+        <DialogHeader>
+          <DialogTitle className="text-center text-3xl font-bold text-green-700">Success!</DialogTitle>
+          <p className="text-center text-4xl mb-2">🥳</p>
+          <div className="flex flex-col items-center gap-3 p-4 bg-white rounded-lg border border-green-200 shadow-sm">
+            <p className="text-green-700 text-lg font-medium text-center">Congratulations! You have successfully minted your parcel.</p>
+          </div>
+        </DialogHeader>
+        <DialogFooter className="flex justify-center items-center gap-4 mt-4">
+          <DialogClose asChild>
+            <Button className="text-white px-8 py-2">View My Parcel</Button>
+          </DialogClose>
+        </DialogFooter>
+      </DialogContent>
+    </>
+  );
+
+  const modalContent = (
+    <>
       <DialogContent>
         <DialogHeader>
           <DialogTitle className="text-center text-3xl font-bold text-amber-700">Warning</DialogTitle>
@@ -45,10 +66,8 @@ export function MintAlertDialog({ greenLockDuration }: MintAlertDialogProps) {
             <p className="text-amber-700">You must keep your parcel green for the defined time, or you will lose your carbon rewards!</p>
           </div>
         </DialogHeader>
-        <DialogFooter>
-          <DialogClose asChild>
-            <Button variant="outline">Cancel</Button>
-          </DialogClose>
+        <DialogFooter className="flex justify-center items-center gap-4">
+          <Button variant="outline">Cancel</Button>
           <Button disabled={loadingMint} onClick={handleMint}>
             {loadingMint ? (
               <div className="flex items-center gap-2">
@@ -56,11 +75,20 @@ export function MintAlertDialog({ greenLockDuration }: MintAlertDialogProps) {
                 <span>Minting...</span>
               </div>
             ) : (
-              "Continue"
+              "Mint NFT"
             )}
           </Button>
         </DialogFooter>
       </DialogContent>
+    </>
+  );
+
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button className="w-full mt-2 py-6 text-lg font-semibold bg-green-600 hover:bg-green-700">Green lock for {greenLockDuration} years !</Button>
+      </DialogTrigger>
+      {success ? successContent : modalContent}
     </Dialog>
   );
 }
