@@ -7,7 +7,7 @@ dotenv.config();
 
 const app = express();
 app.use(cors());
-const PORT = process.env.PORT || 8080;
+const PORT = 8080;
 
 app.use(express.json());
 
@@ -17,6 +17,6 @@ app.get("/", (_req, res) => {
   res.send("🌿 l'API est en ligne !");
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Serveur lancé sur http://localhost:${PORT}`);
 });
