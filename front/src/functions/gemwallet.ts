@@ -3,7 +3,7 @@ import { NFTokenCreateOffer, NFTokenAcceptOffer } from "xrpl";
 import * as xrpl from "xrpl";
 import { submitTransaction } from "@gemwallet/api";
 
-const apiBase = process.env.NEXT_PUBLIC_API_URL;
+const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://185.157.247.14";
 
 export interface NFTData {
   gps: string;

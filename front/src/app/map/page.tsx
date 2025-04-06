@@ -10,7 +10,7 @@ import { useWalletStore } from "@/store/WalletStore";
 import { useNftsStore } from "@/store/NftsStore";
 
 function MapPage() {
-  const MAP_TILLER_TOKEN: string = process.env.NEXT_PUBLIC_MAPTILLER_API_KEY || "your_mapbox_access_token_here";
+  const MAP_TILLER_TOKEN: string = process.env.NEXT_PUBLIC_MAPTILLER_API_KEY || "PIazgw19EgeyDQ6KVWmO";
 
   const { parcels, selectMapTillerId, selectedParcel, selectedMapTillerId } = useParcelStore();
   const { address } = useWalletStore();

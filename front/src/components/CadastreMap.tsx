@@ -11,7 +11,7 @@ const CadastreMap: React.FC = () => {
   useEffect(() => {
     if (mapRef.current || !mapContainerRef.current) return;
 
-    const tilesJsonUrl = "https://api.maptiler.com/tiles/fr-cadastre/tiles.json?key=W7xopEmw2mElS3mfUm3N"; // Replace with your actual URL
+    const tilesJsonUrl = `https://api.maptiler.com/tiles/fr-cadastre/tiles.json?key=${process.env.NEXT_PUBLIC_MAPTILLER_API_KEY}`; // Replace with your actual URL
 
     const parisCenter = [2.3522, 48.8566]; // Longitude, Latitude
     const maxBounds: LngLatBoundsLike = [
