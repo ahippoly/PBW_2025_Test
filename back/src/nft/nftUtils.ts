@@ -142,3 +142,20 @@ export async function getSellInformation(nft_id : string, client: xrpl.Client): 
     
 }
 
+
+// Fonction pour simuler une date de mint (10 minutes dans le passé)
+export function simulateMintTime(): string {
+  const mintDate = new Date();
+  mintDate.setMinutes(mintDate.getMinutes() - 10);
+  return mintDate.toISOString();
+}
+
+// Fonction pour calculer le temps écoulé en secondes
+export function calculateSecondsElapsed(lastClaimTime: string): number {
+  const lastClaim = new Date(lastClaimTime);
+  const now = new Date();
+  const diffMs = now.getTime() - lastClaim.getTime();
+  return Math.floor(diffMs / 1000);
+}
+
+

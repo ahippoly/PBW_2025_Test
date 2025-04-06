@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { connectGemWallet, fetchNFTInfo, fetchNFTs, mintNewNFT, createOfferNft, buyNFT } from './gemwallet'
+import { connectGemWallet, fetchNFTInfo, fetchNFTs, mintNewNFT, createOfferNft, buyNFT, claimTokens } from './gemwallet'
 import './App.css'
 
 
@@ -13,6 +13,7 @@ function App() {
   const [nftID, setNftID] = useState("")
   const [nftID2, setNftID2] = useState("")
   const [nftID3, setNftID3] = useState("")
+  const [nftID4, setNftID4] = useState("")
 
 
   const handleConnect = async () => {
@@ -51,6 +52,11 @@ function App() {
 
   const buyNft = async () => {
     const result = await buyNFT(nftID3, address);
+    uiConsole(result);
+  };
+
+  const claimToken = async () => {
+    const result = await claimTokens(nftID4, address);
     uiConsole(result);
   };
 
@@ -149,6 +155,20 @@ function App() {
           style={{ padding: "0.5em", width: "100%" }}
         />
 
+        
+
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: "0.5em", maxWidth: "300px" }}>
+        <button onClick={claimToken} className="card" style={{ marginBottom: 0 }}>
+          Claim Carbon Credits
+        </button>
+        <input
+          type="text"
+          placeholder="Enter NFT id"
+          value={nftID4}
+          onChange={(e) => setNftID4(e.target.value)}
+          style={{ padding: "0.5em", width: "100%" }}
+        />
         </div>
       <div id="console" style={{ whiteSpace: "pre-line" }}>
         <p style={{ whiteSpace: "pre-line" }}></p>
