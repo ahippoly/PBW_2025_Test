@@ -28,6 +28,13 @@ interface MintAlertDialogProps {
   greenLockDuration: number;
 }
 
+const convertIpfsToHttp = (uri: string) => {
+  // Extract just the CID (hash) from the IPFS URI
+  const parts = uri.replace("ipfs://", "").split("/");
+  const cid = parts[0];
+  return `https://ipfs.io/ipfs/${cid}`;
+};
+
 export function MintAlertDialog({ greenLockDuration }: MintAlertDialogProps) {
   const [loadingMint, setLoadingMint] = useState(false);
   const [success, setSuccess] = useState<boolean | undefined>(undefined);
@@ -52,6 +59,7 @@ export function MintAlertDialog({ greenLockDuration }: MintAlertDialogProps) {
       price: "0",
       address: address,
     });
+    console.log("🚀 ~ handleMint ~ tokenId:", tokenId);
 
     const updatedParcel: Parcel = {
       ...selectedParcel,
@@ -61,7 +69,7 @@ export function MintAlertDialog({ greenLockDuration }: MintAlertDialogProps) {
       },
       legalDocuments: {
         ...selectedParcel.legalDocuments,
-        uri: uri,
+        uri: convertIpfsToHttp(uri),
       },
       nftId: tokenId,
     };

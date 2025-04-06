@@ -34,7 +34,7 @@ const createNFT = async (gps: string, surface: number, owner: string, terrain_id
 
     const ipfs_uri = await uploadToIPFS(landMetadata, `${terrain_id}.json`);
 
-    return ipfs_uri;
+    return ipfs_uri_file;
   } catch (error) {
     console.error(error);
     throw new Error("Failed to create NFT");
@@ -380,85 +380,78 @@ export const acceptOffer = async (req: Request, res: Response): Promise<void> =>
 
 export const claimNFT = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { nft_id, address } = req.body
+    const { nft_id, address } = req.body;
 
     const client = new xrpl.Client("wss://s.altnet.rippletest.net:51233");
     await client.connect();
     const issuerWallet = xrpl.Wallet.fromSeed(process.env.SECRET_KEY!);
     const currency = "FST";
-    
-    
+
     // Vérifier si le NFT existe dans le wallet
     const nftsResponse = await client.request({
       command: "account_nfts",
       account: address,
-      ledger_index: "validated"
+      ledger_index: "validated",
     });
-    
-    const nftExists = nftsResponse.result.account_nfts.some(nft => 
-      nft.NFTokenID === nft_id
-    );
-    
+
+    const nftExists = nftsResponse.result.account_nfts.some((nft) => nft.NFTokenID === nft_id);
+
     if (!nftExists) {
-      res.status(400).json({ error: 'NFT non trouvé dans le wallet' });
+      res.status(400).json({ error: "NFT non trouvé dans le wallet" });
     }
-    
+
     // Calculer les tokens à réclamer
     const claimData = loadClaimData();
-    
+
     const lastClaimTime = claimData[nft_id]?.lastClaim || simulateMintTime();
     const secondsElapsed = calculateSecondsElapsed(lastClaimTime);
     const tokensToMint = secondsElapsed;
-    
+
     console.log(`Tokens to mint: ${tokensToMint} FST`);
-    
+
     // Mettre à jour la date de réclamation
     claimData[nft_id] = {
-      lastClaim: new Date().toISOString()
+      lastClaim: new Date().toISOString(),
     };
     saveClaimData(claimData);
 
-     
-
-    
     // Mint les tokens réclamés
     const claimTx: xrpl.Payment = {
-      "TransactionType": "Payment",
-      "Account": issuerWallet.address,
-      "Destination": address,
-      "Amount": {
-        "currency": currency,
-        "value": tokensToMint.toString(),
-        "issuer": issuerWallet.address
-      }
+      TransactionType: "Payment",
+      Account: issuerWallet.address,
+      Destination: address,
+      Amount: {
+        currency: currency,
+        value: tokensToMint.toString(),
+        issuer: issuerWallet.address,
+      },
     };
-    
+
     const preparedClaim = await client.autofill(claimTx);
     const signedClaim = issuerWallet.sign(preparedClaim);
     const claimResult = await client.submitAndWait(signedClaim.tx_blob);
-    
+
     // Vérifier le solde après la réclamation
     const destAccountLines = await client.request({
       command: "account_lines",
       account: address,
-      ledger_index: "validated"
+      ledger_index: "validated",
     });
-    
+
     let currentBalance = 0;
-    destAccountLines.result.lines.forEach(line => {
+    destAccountLines.result.lines.forEach((line) => {
       if (line.currency === currency && line.account === issuerWallet.address) {
         currentBalance = parseFloat(line.balance);
       }
     });
-    
-    res.status(200).json({ 
-      amount: tokensToMint, 
+
+    res.status(200).json({
+      amount: tokensToMint,
       transaction: claimResult.result.hash,
-      currentBalance: currentBalance
+      currentBalance: currentBalance,
     });
   } catch (error) {
-    console.error('Erreur lors de la réclamation des tokens:', error);
-    res.status(500).json({ "Error": "Erreur lors de la réclamation des tokens" });
+    console.error("Erreur lors de la réclamation des tokens:", error);
+    res.status(500).json({ Error: "Erreur lors de la réclamation des tokens" });
   }
-}
-
+};

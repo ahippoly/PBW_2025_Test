@@ -26,11 +26,11 @@ function MapPage() {
     }
   }, [selectedParcel]);
 
-  useEffect(() => {
-    if (address) {
-      getAllRemotesNfts();
-    }
-  }, [address]);
+  // useEffect(() => {
+  //   if (address) {
+  //     getAllRemotesNfts();
+  //   }
+  // }, [address]);
 
   console.log("🚀 ~ MapPage ~ selectedMapTillerId:", selectedMapTillerId);
   console.log("🚀 ~ MapPage ~ selectedParcel:", selectedParcel);

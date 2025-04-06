@@ -23,6 +23,7 @@ const ParcelColorPerType = {
   minted_buyable: "#006400",
   invalid: "#ff0000",
   my: "#1E90FF",
+  regular: "#808080",
 };
 
 const MapTillerView: React.FC<MapViewProps> = ({
@@ -32,7 +33,7 @@ const MapTillerView: React.FC<MapViewProps> = ({
   parcels = [],
   userAddress,
   onParcelSelect,
-  testMode = false,
+  testMode = true,
   selectedMapTillerId,
   onMapTillerIdSelect,
 }) => {
@@ -52,6 +53,7 @@ const MapTillerView: React.FC<MapViewProps> = ({
       minted_buyable: [] as string[],
       invalid: [] as string[],
       my: [] as string[],
+      regular: [] as string[],
     };
 
     parcels.forEach((parcel) => {
@@ -118,6 +120,21 @@ const MapTillerView: React.FC<MapViewProps> = ({
         });
       });
 
+      const allOtherParcelsIds = parcels.map((parcel) => parcel.mapTillerId);
+
+      mapInstance.addLayer({
+        id: "cadastre-parcels-regular",
+        type: "fill",
+        source: "cadastre",
+        "source-layer": "parcelles",
+        paint: {
+          "fill-color": "#ffffff",
+          "fill-opacity": 0.1,
+          "fill-outline-color": "#000000",
+        },
+        // filter: ["!", ["in", ["get", "id"], ["literal", allOtherParcelsIds]]],
+      });
+
       // Add hover effect layer
       mapInstance.addLayer({
         id: "cadastre-parcels-highlighted",
@@ -153,6 +170,8 @@ const MapTillerView: React.FC<MapViewProps> = ({
     const setupEventHandlers = (mapInstance: any) => {
       // Handle mouse move over parcels
       const layerIds = Object.keys(ParcelColorPerType).map((type) => `cadastre-parcels-${type}`);
+      // Add regular parcels layer to layerIds
+      layerIds.push("cadastre-parcels-regular");
 
       // Handle mouse move over parcels
       mapInstance.on("mousemove", layerIds, (e: any) => {
@@ -310,11 +329,15 @@ const MapTillerView: React.FC<MapViewProps> = ({
       map.current.setFilter(layerId, ["in", ["get", "id"], ["literal", parcelsByType[type as keyof typeof parcelsByType]]]);
     });
 
+    // Update the regular parcels layer (all parcels that aren't in the other categories)
+    const allOtherParcelsIds = parcels.map((parcel) => parcel.mapTillerId);
+    map.current.setFilter("cadastre-parcels-regular", ["!", ["in", ["get", "id"], ["literal", allOtherParcelsIds]]]);
+
     // If there's a selected parcel, make sure it stays selected
     if (selectedMapTillerId) {
       map.current.setFilter("cadastre-parcels-selected", ["==", "id", selectedMapTillerId]);
     }
-  }, [parcelsByType, selectedMapTillerId]);
+  }, [selectedMapTillerId, parcels]);
 
   // Update selected parcel highlight when selection changes
   useEffect(() => {
