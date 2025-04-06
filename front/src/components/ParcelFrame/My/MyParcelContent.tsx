@@ -2,12 +2,14 @@ import { Button } from "@/components/ui/button";
 import { CardContent, CardHeader } from "@/components/ui/card";
 import { CardTitle } from "@/components/ui/card";
 import { FileText, Leaf, Clock, Tag, Coins } from "lucide-react";
+import {claimTokens} from "@/functions/gemwallet";
+
 
 interface MyParcelContentProps {
   parcel: Parcel;
 }
 
-function MyParcelContent({ parcel }: MyParcelContentProps) {
+function MyParcelContent({ parcel}: MyParcelContentProps) {
   return (
     <>
       <CardHeader className="pb-3">
@@ -67,7 +69,7 @@ function MyParcelContent({ parcel }: MyParcelContentProps) {
 
         <div className="flex gap-2 justify-center mt-2">
           <Button className="bg-purple-600 hover:bg-purple-700">Sell</Button>
-          <Button className="bg-green-600 hover:bg-green-700">Claim Carbon</Button>
+          <Button onClick={() => claimTokens(parcel.nftId, parcel.owner.addressXRPL)} className="bg-green-600 hover:bg-green-700">Claim Carbon</Button>
         </div>
       </CardContent>
     </>
