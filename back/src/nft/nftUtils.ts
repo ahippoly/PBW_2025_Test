@@ -1,4 +1,4 @@
-import xrpl from 'xrpl'
+import xrpl, { NFTBuyOffersRequest, NFTokenAcceptOffer, NFTokenCreateOffer } from 'xrpl'
 
 export interface LandMetadata {
     land_id: string
@@ -7,6 +7,7 @@ export interface LandMetadata {
     surface: number
     owner: string
     platform: string,
+    mint_date: string
     contract_uri?: string
   }
 
@@ -127,6 +128,7 @@ export async function getSellInformation(nft_id : string, client: xrpl.Client): 
           forSale: true,
           price: offer.amount,
           owner: offer.owner,
+          
         }
     
     } catch (error) {
@@ -139,3 +141,4 @@ export async function getSellInformation(nft_id : string, client: xrpl.Client): 
     }
     
 }
+
