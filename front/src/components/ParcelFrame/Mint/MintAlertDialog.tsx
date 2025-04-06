@@ -43,6 +43,7 @@ export function MintAlertDialog({ greenLockDuration }: MintAlertDialogProps) {
       console.error("No parcel selected");
       return;
     }
+    setLoadingMint(true);
 
     await mintNewNFT({
       gps: selectedParcel.mapTillerId,
@@ -52,7 +53,6 @@ export function MintAlertDialog({ greenLockDuration }: MintAlertDialogProps) {
       address: address,
     });
 
-    setLoadingMint(true);
     setTimeout(() => {
       setLoadingMint(false);
       setSuccess(true);
