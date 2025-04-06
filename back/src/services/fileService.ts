@@ -231,3 +231,35 @@ export async function generateOreContractPDF(data: LandMetadata): Promise<Buffer
     })
   })
 }
+
+// Définir un type pour les données de réclamation
+export interface ClaimData {
+  [key: string]: {
+    lastClaim: string; // format ISO string
+    [key: string]: any; // pour permettre d'autres champs dynamiques
+  };
+}
+
+// Fonction pour charger les données de réclamation
+export function loadClaimData(): ClaimData {
+  try {
+    if (fs.existsSync('claims.json')) {
+      const data = fs.readFileSync('claims.json', 'utf8');
+      return JSON.parse(data) as ClaimData;
+    }
+    return {};
+  } catch (error) {
+    console.error('Error loading claim data:', error);
+    return {};
+  }
+}
+
+// Fonction pour sauvegarder les données de réclamation
+export function saveClaimData(data: ClaimData): void {
+  try {
+    fs.writeFileSync('claims.json', JSON.stringify(data, null, 2), 'utf8');
+    console.log('✅ Updated claims data saved');
+  } catch (error) {
+    console.error('❌ Error saving claim data:', error);
+  }
+}

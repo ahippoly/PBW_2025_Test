@@ -30,7 +30,7 @@ export const connectGemWallet = async () => {
 
 export const fetchNFTInfo = async (nftID : string): Promise<any> => {
     try {
-      const response = await fetch(`http://localhost:3000/nft/fetch/${nftID}`);
+      const response = await fetch(`http://localhost:8080/nft/fetch/${nftID}`);
       if (!response.ok) {
         throw new Error('Erreur réseau');
       }
@@ -44,7 +44,7 @@ export const fetchNFTInfo = async (nftID : string): Promise<any> => {
 
 export const fetchNFTs = async (): Promise<any> => {
     try {
-      const response = await fetch(`http://localhost:3000/nft/fetch`);
+      const response = await fetch(`http://localhost:8080/nft/fetch`);
       if (!response.ok) {
         throw new Error('Erreur réseau');
       }
@@ -77,7 +77,7 @@ export const fetchNFTs = async (): Promise<any> => {
 
   export const mintNewNFT = async (nftData: any): Promise<any> => {
     try {
-      const response = await fetch(`http://localhost:3000/nft/mint`, {
+      const response = await fetch(`http://localhost:8080/nft/mint`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -155,7 +155,7 @@ export const createOfferNft = async (price: string, nft_id : string, address : s
 
 export const buyNFT = async (nft_id: string, address: string): Promise<any> => {
     try {
-        const response = await fetch(`http://localhost:3000/nft/buy`, {
+        const response = await fetch(`http://localhost:8080/nft/buy`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -180,6 +180,47 @@ export const buyNFT = async (nft_id: string, address: string): Promise<any> => {
 
     } catch (err) {
       console.error('Erreur lors de l\'achat NFT:', err);
+      return err;
+    }
+  }
+
+  export const claimTokens = async (nft_id : string, address: string): Promise<any> => {
+    try {
+        const currency = "FST";
+        const issuerWalletAddress = "rNKB7zoaWiR1vacQDrvx1JKYzptjbiqnaE";
+        // Create trustline from destination wallet to issuer
+        console.log("Creating trustline from destination wallet to token issuer...");
+        const destTrustSetTx : xrpl.TrustSet = {
+        "TransactionType": "TrustSet",
+        "Account": address,
+        "LimitAmount": {
+            "currency": currency,
+            "value": "1000000", 
+            "issuer": issuerWalletAddress
+        }
+        };
+        
+        const signed = await submitTransaction({
+            transaction: destTrustSetTx,
+          });
+
+        console.log("Destination trustline created:", signed);
+    
+        const response = await fetch(`http://localhost:8080/nft/claim`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ nft_id, address }),
+        });
+        if (!response.ok) {
+            throw new Error('Erreur réseau');
+        }
+        const data = await response.json();
+        console.log("Tokens réclamés :", data);
+        return data;
+    } catch (err) {
+      console.error('Erreur lors du fetch NFTs:', err);
       return err;
     }
   }
