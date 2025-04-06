@@ -22,7 +22,7 @@ const ParcelColorPerType = {
   mintable: "#808080",
   minted_buyable: "#006400",
   invalid: "#ff0000",
-  my: "#0000ff",
+  my: "#1E90FF",
 };
 
 const MapTillerView: React.FC<MapViewProps> = ({
@@ -139,7 +139,7 @@ const MapTillerView: React.FC<MapViewProps> = ({
         source: "cadastre",
         "source-layer": "parcelles",
         paint: {
-          "fill-color": "#0080aa",
+          "fill-color": "#ffffff",
           "fill-opacity": 0.8,
           "fill-outline-color": "#000000",
         },

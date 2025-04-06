@@ -5,6 +5,8 @@ import MintedParcelContent from "./Mint/MintedParcelContent";
 import NoParcelSelected from "./NoParcelSelected";
 import MintableParcelContent from "./MintableParcelContent";
 import InvalidParcelContent from "./InvalidParcelContent";
+import { tempAddressXRPL } from "@/data/tempAddressXRPL";
+import MyParcelContent from "./My/MyParcelContent";
 
 interface ParcelInfoProps {
   parcel: Parcel | undefined;
@@ -13,6 +15,10 @@ interface ParcelInfoProps {
 const getDisplayContent = (parcel: Parcel | undefined) => {
   if (!parcel) {
     return <NoParcelSelected />;
+  }
+
+  if (parcel.owner.addressXRPL === tempAddressXRPL) {
+    return <MyParcelContent parcel={parcel} />;
   }
 
   if (parcel.type == "minted" || parcel.type == "minted_buyable") {
