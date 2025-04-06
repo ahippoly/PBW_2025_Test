@@ -3,7 +3,7 @@ import { NFTokenCreateOffer, NFTokenAcceptOffer } from "xrpl";
 import * as xrpl from "xrpl";
 import { submitTransaction } from "@gemwallet/api";
 
-const apiBase = "http://localhost:8080";
+const apiBase = process.env.NEXT_PUBLIC_API_URL;
 
 export interface NFTData {
   gps: string;
@@ -190,46 +190,46 @@ export const buyNFT = async (nft_id: string, address: string): Promise<any> => {
   }
 };
 
-export const claimTokens = async (nft_id : string, address: string): Promise<any> => {
+export const claimTokens = async (nft_id: string, address: string): Promise<any> => {
   try {
-      console.log("Claiming tokens for NFT ID:", nft_id);
-      console.log("Claiming tokens for address:", address);
+    console.log("Claiming tokens for NFT ID:", nft_id);
+    console.log("Claiming tokens for address:", address);
 
-      const currency = "FST";
-      const issuerWalletAddress = "rNKB7zoaWiR1vacQDrvx1JKYzptjbiqnaE";
-      // Create trustline from destination wallet to issuer
-      console.log("Creating trustline from destination wallet to token issuer...");
-      const destTrustSetTx : xrpl.TrustSet = {
-      "TransactionType": "TrustSet",
-      "Account": address,
-      "LimitAmount": {
-          "currency": currency,
-          "value": "1000000", 
-          "issuer": issuerWalletAddress
-      }
-      };
-      
-      const signed = await submitTransaction({
-          transaction: destTrustSetTx,
-        });
+    const currency = "FST";
+    const issuerWalletAddress = "rNKB7zoaWiR1vacQDrvx1JKYzptjbiqnaE";
+    // Create trustline from destination wallet to issuer
+    console.log("Creating trustline from destination wallet to token issuer...");
+    const destTrustSetTx: xrpl.TrustSet = {
+      TransactionType: "TrustSet",
+      Account: address,
+      LimitAmount: {
+        currency: currency,
+        value: "1000000",
+        issuer: issuerWalletAddress,
+      },
+    };
 
-      console.log("Destination trustline created:", signed);
-  
-      const response = await fetch(`http://localhost:8080/nft/claim`, {
-          method: 'POST',
-          headers: {
-              'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ nft_id, address }),
-      });
-      if (!response.ok) {
-          throw new Error('Erreur réseau');
-      }
-      const data = await response.json();
-      console.log("Tokens réclamés :", data);
-      return data;
+    const signed = await submitTransaction({
+      transaction: destTrustSetTx,
+    });
+
+    console.log("Destination trustline created:", signed);
+
+    const response = await fetch(`${apiBase}/nft/claim`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ nft_id, address }),
+    });
+    if (!response.ok) {
+      throw new Error("Erreur réseau");
+    }
+    const data = await response.json();
+    console.log("Tokens réclamés :", data);
+    return data;
   } catch (err) {
-    console.error('Erreur lors du fetch NFTs:', err);
+    console.error("Erreur lors du fetch NFTs:", err);
     return err;
   }
-}
+};

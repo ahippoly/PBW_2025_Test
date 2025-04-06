@@ -23,13 +23,12 @@ const ParcelColorPerType = {
   minted_buyable: "#006400",
   invalid: "#ff0000",
   my: "#1E90FF",
-  regular: "#808080",
 };
 
 const MapTillerView: React.FC<MapViewProps> = ({
   apiKey,
   center = [48.676165558055494, 1.9618325878575087].reverse(),
-  zoom = 18,
+  zoom = 14,
   parcels = [],
   userAddress,
   onParcelSelect,
@@ -129,10 +128,11 @@ const MapTillerView: React.FC<MapViewProps> = ({
         "source-layer": "parcelles",
         paint: {
           "fill-color": "#ffffff",
-          "fill-opacity": 0.1,
+          "fill-opacity": 0.2,
           "fill-outline-color": "#000000",
         },
         // filter: ["!", ["in", ["get", "id"], ["literal", allOtherParcelsIds]]],
+        filter: ["==", "id", ""],
       });
 
       // Add hover effect layer
@@ -156,8 +156,8 @@ const MapTillerView: React.FC<MapViewProps> = ({
         source: "cadastre",
         "source-layer": "parcelles",
         paint: {
-          "fill-color": "#ffffff",
-          "fill-opacity": 0.8,
+          "fill-color": "#000000",
+          "fill-opacity": 0.6,
           "fill-outline-color": "#000000",
         },
         filter: ["==", "id", ""],
@@ -204,11 +204,12 @@ const MapTillerView: React.FC<MapViewProps> = ({
             // Update popup content
             if (hoverPopupRef.current) {
               let popupContent = "";
-              for (const key in props) {
-                if (Object.prototype.hasOwnProperty.call(props, key)) {
-                  popupContent += `<p><strong>${key}:</strong> ${props[key]}</p>`;
-                }
-              }
+              // for (const key in props) {
+              //   if (Object.prototype.hasOwnProperty.call(props, key)) {
+              //     popupContent += `<p><strong>${key}:</strong> ${props[key]}</p>`;
+              //   }
+              // }
+              popupContent += `<p><strong>Ref: </strong> ${props.id}</p>`;
 
               hoverPopupRef.current.innerHTML = popupContent;
               hoverPopupRef.current.style.display = "block";
@@ -269,12 +270,14 @@ const MapTillerView: React.FC<MapViewProps> = ({
 
           // Update and show the pinned popup
           if (pinnedPopupRef.current) {
-            let popupContent = '<div class="close-button">×</div>';
-            for (const key in props) {
-              if (Object.prototype.hasOwnProperty.call(props, key)) {
-                popupContent += `<p><strong>${key}:</strong> ${props[key]}</p>`;
-              }
-            }
+            let popupContent =
+              '<div class="close-button" style="position: relative; top: 5px; right: 5px; cursor: pointer; font-weight: bold; background: #f5f5f5; border-radius: 50%; height: 20px; width: 20px; text-align: center; line-height: 18px;">×</div>';
+            popupContent += `<p><strong>Ref: </strong> ${props.id}</p>`;
+            // for (const key in props) {
+            //   if (Object.prototype.hasOwnProperty.call(props, key)) {
+            //     popupContent += `<p><strong>${key}:</strong> ${props[key]}</p>`;
+            //   }
+            // }
 
             pinnedPopupRef.current.innerHTML = popupContent;
             pinnedPopupRef.current.style.display = "block";
@@ -331,7 +334,7 @@ const MapTillerView: React.FC<MapViewProps> = ({
 
     // Update the regular parcels layer (all parcels that aren't in the other categories)
     const allOtherParcelsIds = parcels.map((parcel) => parcel.mapTillerId);
-    map.current.setFilter("cadastre-parcels-regular", ["!", ["in", ["get", "id"], ["literal", allOtherParcelsIds]]]);
+    // map.current.setFilter("cadastre-parcels-regular", ["!", ["in", ["get", "id"], ["literal", allOtherParcelsIds]]]);
 
     // If there's a selected parcel, make sure it stays selected
     if (selectedMapTillerId) {
@@ -344,6 +347,13 @@ const MapTillerView: React.FC<MapViewProps> = ({
     if (!map.current || !map.current.isStyleLoaded()) return;
 
     if (selectedMapTillerId) {
+      // if (selectedMapTillerId === "781280000A0076") {
+      //   map.current.flyTo({
+      //     center: [46.676165558055494, 1.9618325878575087].reverse(),
+      //     zoom: 18,
+      //   });
+      // }
+
       map.current.setFilter("cadastre-parcels-selected", ["==", "id", selectedMapTillerId]);
     } else {
       map.current.setFilter("cadastre-parcels-selected", ["==", "id", ""]);

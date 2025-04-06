@@ -1,15 +1,40 @@
 import { Button } from "@/components/ui/button";
 import { CardContent, CardHeader } from "@/components/ui/card";
 import { CardTitle } from "@/components/ui/card";
-import { FileText, Leaf, Clock, Tag, Coins } from "lucide-react";
-import {claimTokens} from "@/functions/gemwallet";
-
+import { FileText, Leaf, Clock, Tag, Coins, Loader2 } from "lucide-react";
+import { claimTokens } from "@/functions/gemwallet";
+import { useWalletStore } from "@/store/WalletStore";
+import { useState } from "react";
 
 interface MyParcelContentProps {
   parcel: Parcel;
 }
 
-function MyParcelContent({ parcel}: MyParcelContentProps) {
+const trimNftId = (nftId: string) => {
+  return nftId.slice(0, 6) + "..." + nftId.slice(-4);
+};
+
+function MyParcelContent({ parcel }: MyParcelContentProps) {
+  const [loading, setLoading] = useState(false);
+  const [carbonToClaim, setCarbonToClaim] = useState(1);
+
+  const { address } = useWalletStore();
+  const handleClaimTokens = async () => {
+    if (!address) {
+      console.error("No address found");
+      return;
+    }
+    setLoading(true);
+    try {
+      await claimTokens(parcel.nftId, address);
+    } catch (error) {
+      console.error("Error claiming tokens", error);
+    } finally {
+      setLoading(false);
+      setCarbonToClaim(0);
+    }
+  };
+
   return (
     <>
       <CardHeader className="pb-3">
@@ -29,7 +54,7 @@ function MyParcelContent({ parcel}: MyParcelContentProps) {
           <div className="flex items-center gap-2 mb-2">
             <Tag className="h-5 w-5 text-purple-600" />
             <p className="font-semibold text-lg">
-              NFT ID: <span className="font-bold">{parcel.nftId}</span>
+              NFT ID: <span className=" ml-auto font-bold">{trimNftId(parcel.nftId)}</span>
             </p>
           </div>
         </div>
@@ -45,7 +70,7 @@ function MyParcelContent({ parcel}: MyParcelContentProps) {
               <p className="font-medium">Claimable Carbon:</p>
               <div className="flex items-center gap-1 bg-white px-3 py-1 rounded-full border border-green-200">
                 <Leaf className="h-4 w-4 text-purple-600" />
-                <p className="font-bold text-purple-600">{parcel.claimableCarbon} TEC</p>
+                <p className="font-bold text-purple-600">{carbonToClaim} FST</p>
               </div>
             </div>
 
@@ -53,7 +78,7 @@ function MyParcelContent({ parcel}: MyParcelContentProps) {
               <p className="font-medium">Carbon Reward Rate:</p>
               <div className="flex items-center gap-1 bg-white px-3 py-1 rounded-full border border-green-200">
                 <Coins className="h-4 w-4 text-purple-600" />
-                <p className="font-bold text-purple-600">{parcel.carbonRewardRate} TEC / Year</p>
+                <p className="font-bold text-purple-600">{parcel.carbonRewardRate} FST / Year</p>
               </div>
             </div>
 
@@ -69,7 +94,9 @@ function MyParcelContent({ parcel}: MyParcelContentProps) {
 
         <div className="flex gap-2 justify-center mt-2">
           <Button className="bg-purple-600 hover:bg-purple-700">Sell</Button>
-          <Button onClick={() => claimTokens(parcel.nftId, parcel.owner.addressXRPL)} className="bg-green-600 hover:bg-green-700">Claim Carbon</Button>
+          <Button onClick={handleClaimTokens} className="bg-green-600 hover:bg-green-700" disabled={loading}>
+            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Claim Carbon"}
+          </Button>
         </div>
       </CardContent>
     </>

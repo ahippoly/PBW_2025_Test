@@ -25,7 +25,7 @@ function NoParcelUploadContent({ parcel }: NoParcelUploadContentProps) {
         <div className="flex flex-col justify-center items-center flex-grow py-6 bg-green-50 rounded-lg">
           <div className="flex items-center gap-2">
             <CheckCircle2 className="h-6 w-6 text-green-600" />
-            <p className="text-lg font-medium text-green-600">Assessment is verified and valid!</p>
+            <p className="text-lg font-medium text-green-600 max-w-md text-center">Credentials has been verified !</p>
           </div>
         </div>
 

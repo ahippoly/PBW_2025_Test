@@ -38,9 +38,15 @@ export const allParcels: Parcel[] = [
 
   // Minted parcels
   createParcel("minted", "781280000B0654", "Foret de la Forêt"),
+  createParcel("minted", "785900000D0082", "Foret de la Forêt"),
+  createParcel("minted", "785900000D0067", "Foret de la Forêt"),
+  createParcel("minted", "781280000B0484", "Foret de la Forêt"),
 
   // Buyable parcels
-  createParcel("minted_buyable", "781280000B0275", "Terrain achetable miam"),
+  createParcel("minted_buyable", "781280000B0275", "Foret de la Forêt"),
+  createParcel("minted_buyable", "785900000D0083", "Terrain achetable miam"),
+  createParcel("minted_buyable", "785900000D0099", "Terrain achetable miam"),
+  createParcel("minted_buyable", "785900000D0077", "Terrain achetable miam"),
 ];
 
 export default allParcels;
