@@ -31,7 +31,7 @@ interface MintAlertDialogProps {
 export function MintAlertDialog({ greenLockDuration }: MintAlertDialogProps) {
   const [loadingMint, setLoadingMint] = useState(false);
   const [success, setSuccess] = useState<boolean | undefined>(undefined);
-  const { selectedParcel } = useParcelStore();
+  const { selectedParcel, updateParcel } = useParcelStore();
   const { address } = useWalletStore();
   const handleMint = async () => {
     if (!address) {
@@ -45,13 +45,28 @@ export function MintAlertDialog({ greenLockDuration }: MintAlertDialogProps) {
     }
     setLoadingMint(true);
 
-    await mintNewNFT({
+    const { tokenId, offerID, result, uri } = await mintNewNFT({
       gps: selectedParcel.mapTillerId,
       surface: 102,
       ref_cad: selectedParcel.mapTillerId,
       price: "0",
       address: address,
     });
+
+    const updatedParcel: Parcel = {
+      ...selectedParcel,
+      owner: {
+        ...selectedParcel.owner,
+        addressXRPL: address,
+      },
+      legalDocuments: {
+        ...selectedParcel.legalDocuments,
+        uri: uri,
+      },
+      nftId: tokenId,
+    };
+
+    updateParcel(updatedParcel);
 
     setTimeout(() => {
       setLoadingMint(false);

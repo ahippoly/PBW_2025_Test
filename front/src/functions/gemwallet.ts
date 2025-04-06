@@ -102,6 +102,7 @@ export const mintNewNFT = async (nftData: NFTData): Promise<any> => {
     const offerID = data.offerID;
     const tokenID = data.tokenId;
     const userAddress = nftData.address;
+    const uri = data.uri;
 
     if (!offerID) {
       throw new Error("Offer ID introuvable !");
@@ -126,6 +127,7 @@ export const mintNewNFT = async (nftData: NFTData): Promise<any> => {
       tokenID: tokenID,
       offerID: offerID,
       result: result,
+      uri: uri,
     };
   } catch (err) {
     console.error("❌ Erreur lors du mint ou de l'acceptation :", err);

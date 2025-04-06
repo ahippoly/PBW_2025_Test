@@ -13,13 +13,13 @@ interface NoParcelUploadContentProps {
 const rewardRate = 10;
 
 function NoParcelUploadContent({ parcel }: NoParcelUploadContentProps) {
-  const [greenLockDuration, setGreenLockDuration] = useState(33);
+  const [greenLockDuration, setGreenLockDuration] = useState(65);
   const totalReward = rewardRate * greenLockDuration;
 
   return (
     <>
       <CardHeader className="pb-3">
-        <h1 className="text-2xl text-center font-bold">{parcel.name}</h1>
+        <h1 className="text-2xl text-center font-bold">{parcel.mapTillerId}</h1>
       </CardHeader>
       <CardContent className="flex flex-col h-full gap-4">
         <div className="flex flex-col justify-center items-center flex-grow py-6 bg-green-50 rounded-lg">
@@ -34,10 +34,17 @@ function NoParcelUploadContent({ parcel }: NoParcelUploadContentProps) {
             <Clock className="h-5 w-5 text-blue-600" />
             <p className="font-semibold text-lg">Lock Duration: {greenLockDuration} Years</p>
           </div>
-          <Slider value={[greenLockDuration]} max={100} min={0} step={1} onValueChange={(value) => setGreenLockDuration(value[0])} className="my-2" />
+          <Slider
+            value={[greenLockDuration]}
+            max={100}
+            min={50}
+            step={1}
+            onValueChange={(value) => setGreenLockDuration(value[0])}
+            className="my-2"
+          />
           <div className="flex justify-between text-sm text-slate-500 mt-1">
-            <span>0 Years</span>
             <span>50 Years</span>
+            <span>75 Years</span>
             <span>100 Years</span>
           </div>
         </div>

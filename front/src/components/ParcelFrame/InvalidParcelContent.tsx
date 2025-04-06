@@ -9,7 +9,7 @@ function InvalidParcelContent({ parcel }: InvalidParcelContentProps) {
   return (
     <>
       <CardHeader>
-        <CardTitle className="text-center">{parcel.name}</CardTitle>
+        <CardTitle className="text-center">{parcel.mapTillerId}</CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col justify-center items-center gap-8 h-full">
         <div className="flex flex-col items-center gap-4">

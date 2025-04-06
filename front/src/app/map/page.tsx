@@ -6,12 +6,15 @@ import ParcelInfo from "@/components/ParcelFrame/ParcelInfo";
 import { useState, useMemo, useEffect } from "react";
 import { useParcelStore } from "@/store/ParcelStore";
 import { tempAddressXRPL } from "@/data/tempAddressXRPL";
+import { useWalletStore } from "@/store/WalletStore";
+import { useNftsStore } from "@/store/NftsStore";
 
 function MapPage() {
   const MAP_TILLER_TOKEN: string = process.env.NEXT_PUBLIC_MAPTILLER_API_KEY || "your_mapbox_access_token_here";
 
   const { parcels, selectMapTillerId, selectedParcel, selectedMapTillerId } = useParcelStore();
-
+  const { address } = useWalletStore();
+  const { getAllRemotesNfts } = useNftsStore();
   // Update store's selected parcel when MapTiller ID changes
   useEffect(() => {
     selectMapTillerId(selectedMapTillerId);
@@ -22,6 +25,12 @@ function MapPage() {
       selectMapTillerId(selectedParcel.mapTillerId);
     }
   }, [selectedParcel]);
+
+  useEffect(() => {
+    if (address) {
+      getAllRemotesNfts();
+    }
+  }, [address]);
 
   console.log("🚀 ~ MapPage ~ selectedMapTillerId:", selectedMapTillerId);
   console.log("🚀 ~ MapPage ~ selectedParcel:", selectedParcel);
@@ -36,7 +45,7 @@ function MapPage() {
             onMapTillerIdSelect={selectMapTillerId}
             apiKey={MAP_TILLER_TOKEN}
             parcels={parcels}
-            userAddress={tempAddressXRPL}
+            userAddress={address || undefined}
           />
         </div>
         <div className="flex-grow flex justify-center items-center h-full relative">

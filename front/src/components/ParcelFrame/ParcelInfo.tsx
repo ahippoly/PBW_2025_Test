@@ -8,17 +8,19 @@ import InvalidParcelContent from "./InvalidParcelContent";
 import { tempAddressXRPL } from "@/data/tempAddressXRPL";
 import MyParcelContent from "./My/MyParcelContent";
 import NoParcelUploadContent from "./NoParcel/NoParcelUploadContent";
+import { useWalletStore } from "@/store/WalletStore";
 
 interface ParcelInfoProps {
   parcel: Parcel | undefined;
 }
 
 const getDisplayContent = (parcel: Parcel | undefined) => {
+  const { address } = useWalletStore();
   if (!parcel) {
     return <NoParcelSelected />;
   }
 
-  if (parcel.owner.addressXRPL === tempAddressXRPL) {
+  if (parcel.owner.addressXRPL === address) {
     return <MyParcelContent parcel={parcel} />;
   }
 

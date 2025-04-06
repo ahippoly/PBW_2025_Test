@@ -10,6 +10,7 @@ type ParcelType = "mintable" | "minted_buyable" | "invalid" | "minted";
 interface LegalDocuments {
   id: string;
   name: string;
+  uri?: string;
 }
 
 interface Parcel {

@@ -10,7 +10,7 @@ function MintedParcelContent({ parcel }: MintedParcelContentProps) {
   return (
     <>
       <CardHeader>
-        <h1 className="text-2xl text-center font-bold mb-2">{parcel.name}</h1>
+        <h1 className="text-2xl text-center font-bold mb-2">{parcel.mapTillerId}</h1>
       </CardHeader>
       <CardContent className="flex flex-col h-full gap-2">
         <div className="flex flex-col justify-start  flex-grow">

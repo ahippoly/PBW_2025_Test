@@ -78,8 +78,10 @@ export const createOffer = async (req: Request, res: Response): Promise<void> =>
 export function extractOfferID(meta: any): string | undefined {
   const nodes = meta?.AffectedNodes;
 
+  console.log("🚀 ~ extractOfferID ~ nodes:", JSON.stringify(nodes, null, 2));
+
   if (!Array.isArray(nodes)) {
-    console.error("❌ AffectedNodes n’est pas un tableau :", nodes);
+    console.error("❌ AffectedNodes n'est pas un tableau :", nodes);
     return undefined;
   }
 
@@ -161,7 +163,7 @@ export const mintNFT = async (req: Request, res: Response): Promise<void> => {
     console.log("✅ Offer ID extrait avec succès :", offerID);
 
     // Send the response
-    res.status(200).json({ tokenId, offerID, result: resultOffer });
+    res.status(200).json({ tokenId, offerID, result: resultOffer, uri: ipfsUri });
     await client.disconnect();
   } catch (error) {
     console.error("❌ Erreur lors de la création de l'NFT :", error);
@@ -242,14 +244,19 @@ export const fetchNFTs = async (req: Request, res: Response): Promise<void> => {
       ledger_index_max: -1,
       limit: 200,
     });
+    console.log("🚀 ~ minted ~ res_minted.result.transactions:", res_minted.result.transactions);
 
-    const minted = res_minted.result.transactions.filter((tx) => tx.tx!.TransactionType === "NFTokenMint");
+    const minted = res_minted.result.transactions.filter((tx) => {
+      const transaction = tx.tx_json as unknown as { TransactionType?: string };
+      return transaction && transaction.TransactionType === "NFTokenMint";
+    });
+    const last5Minted = minted.slice(-5);
 
     console.log("✅ Transactions mintées récupérées avec succès :", minted);
 
     const mintedNFTIds: string[] = [];
 
-    for (const tx of minted) {
+    for (const tx of last5Minted) {
       const id = xrpl.getNFTokenID(tx.meta);
       if (!id) {
         console.log("❌ ID non trouvé dans la transaction :", tx);

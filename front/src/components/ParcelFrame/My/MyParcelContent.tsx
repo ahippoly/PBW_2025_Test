@@ -11,16 +11,16 @@ function MyParcelContent({ parcel }: MyParcelContentProps) {
   return (
     <>
       <CardHeader className="pb-3">
-        <CardTitle className="text-2xl text-center font-bold">My Parcel</CardTitle>
+        <CardTitle className="text-2xl text-center font-bold">{parcel.mapTillerId}</CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col h-full gap-4">
         <div className="flex flex-col justify-center items-center flex-grow py-6 bg-green-50 rounded-lg">
-          <div className="flex items-center gap-2">
+          <a href={parcel.legalDocuments.uri} target="_blank" className="cursor-pointer flex items-center gap-2">
             <FileText className="h-5 w-5 text-blue-600" />
             <p className="font-medium">
-              ORE document link: <span className="font-bold">{parcel.legalDocuments.name}</span>
+              ORE document: <span className="font-bold">{parcel.legalDocuments.name}</span>
             </p>
-          </div>
+          </a>
         </div>
 
         <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
