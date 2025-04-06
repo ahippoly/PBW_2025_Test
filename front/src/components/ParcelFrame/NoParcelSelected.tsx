@@ -1,12 +1,16 @@
-import { CardContent } from "../ui/card";
+import { useState } from "react";
+import { Button } from "../ui/button";
+import { CardContent, CardHeader, CardTitle } from "../ui/card";
+import DragAndDropFileInput from "./DragAndDropFileInput";
+import { MapIcon, Upload } from "lucide-react";
+import { BaseContent } from "./NoParcel/NoParcelBaseContent";
+import NoParcelUploadContent from "./NoParcel/NoParcelUploadContent";
+import { exampleUploadedParcel } from "@/data/exampleUploadedParcel";
 
 function NoParcelSelected() {
-  return (
-    <CardContent className="flex flex-col justify-center items-center gap-8 h-full">
-      <h1 className="text-center text-3xl font-bold">No parcel selected yet</h1>
-      <p className="text-sm text-gray-500 max-w-[300px] text-center">To begin, select a parcel you want to buy or one that you own</p>
-    </CardContent>
-  );
+  const [files, setFiles] = useState<File[]>([]);
+
+  return <>{files.length > 0 ? <NoParcelUploadContent parcel={exampleUploadedParcel} /> : <BaseContent setFiles={setFiles} />}</>;
 }
 
 export default NoParcelSelected;

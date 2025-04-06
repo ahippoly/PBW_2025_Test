@@ -310,6 +310,7 @@ const MapTillerView: React.FC<MapViewProps> = ({
           "cadastre-parcels-mintable",
           "cadastre-parcels-buyable",
           "cadastre-parcels-invalid",
+          "cadastre-parcels-my",
         ],
         (e: any) => {
           const features = mapInstance.queryRenderedFeatures(e.point, {
@@ -326,6 +327,8 @@ const MapTillerView: React.FC<MapViewProps> = ({
           if (features.length > 0) {
             const feature = features[0];
             const props = feature.properties;
+
+            console.log("🚀 ~ setupEventHandlers ~ feature:", feature);
 
             // If clicking the already selected parcel, deselect it
             if (selectedMapTillerId === props.id) {

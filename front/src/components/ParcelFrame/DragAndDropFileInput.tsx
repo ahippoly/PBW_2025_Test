@@ -1,8 +1,8 @@
 "use client";
 
-import { ChangeEvent, DragEvent, useState } from "react";
+import { ChangeEvent, DragEvent, useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { FileIcon } from "lucide-react";
+import { FileIcon, Loader2 } from "lucide-react";
 
 interface DragAndDropFileInputProps {
   onFilesSelected: (files: File[]) => void;
@@ -13,6 +13,20 @@ interface DragAndDropFileInputProps {
 
 function DragAndDropFileInput({ onFilesSelected, className, accept, multiple = false }: DragAndDropFileInputProps) {
   const [isDragging, setIsDragging] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Reset loading state after 1 second
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (isLoading) {
+      timer = setTimeout(() => {
+        setIsLoading(false);
+      }, 1000);
+    }
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [isLoading]);
 
   const handleDragOver = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -26,25 +40,27 @@ function DragAndDropFileInput({ onFilesSelected, className, accept, multiple = f
     setIsDragging(false);
   };
 
+  const handleFileList = (fileList: FileList) => {
+    const filesArray = multiple ? Array.from(fileList) : [fileList[0]];
+    setIsLoading(true);
+    setTimeout(() => {
+      onFilesSelected(filesArray);
+    }, 1000);
+  };
+
   const handleDrop = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(false);
 
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      const fileList = e.dataTransfer.files;
-      const filesArray = multiple ? Array.from(fileList) : [fileList[0]];
-
-      onFilesSelected(filesArray);
+      handleFileList(e.dataTransfer.files);
     }
   };
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      const fileList = e.target.files;
-      const filesArray = multiple ? Array.from(fileList) : [fileList[0]];
-
-      onFilesSelected(filesArray);
+      handleFileList(e.target.files);
     }
   };
 
@@ -65,15 +81,24 @@ function DragAndDropFileInput({ onFilesSelected, className, accept, multiple = f
         onChange={handleFileChange}
         accept={accept}
         multiple={multiple}
+        disabled={isLoading}
       />
       <div className="flex flex-col items-center justify-center gap-2 text-center">
-        <FileIcon className="w-10 h-10 text-gray-400" />
+        {isLoading ? <Loader2 className="w-10 h-10 text-primary animate-spin" /> : <FileIcon className="w-10 h-10 text-gray-400" />}
         <p className="text-sm text-gray-500">
-          <span className="font-medium text-primary">Click to upload</span> or drag and drop
+          {isLoading ? (
+            <span className="font-medium text-primary">Processing file...</span>
+          ) : (
+            <>
+              <span className="font-medium text-primary">Click to upload</span> or drag and drop
+            </>
+          )}
         </p>
-        <p className="text-xs text-gray-400">
-          {multiple ? "Files" : "File"} {accept ? `(${accept})` : ""}
-        </p>
+        {!isLoading && (
+          <p className="text-xs text-gray-400">
+            {multiple ? "Files" : "File"} {accept ? `(${accept})` : ""}
+          </p>
+        )}
       </div>
     </div>
   );
