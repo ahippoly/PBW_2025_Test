@@ -1,5 +1,6 @@
 interface Owner {
   id: string;
+  addressXRPL: string;
   firstName: string;
   lastName: string;
 }
@@ -26,4 +27,5 @@ interface Parcel {
   owner: Owner;
   type: ParcelType;
   invalidReason?: string;
+  lockedUntil?: number;
 }

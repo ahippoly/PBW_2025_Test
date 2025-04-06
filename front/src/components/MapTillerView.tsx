@@ -9,28 +9,28 @@ interface MapViewProps {
   apiKey: string;
   center?: [number, number];
   zoom?: number;
-  whiteListedParcels?: Parcel[];
-  mintableParcel?: Parcel;
-  mintedParcels?: Parcel[];
-  invalidParcels?: Parcel[];
-  buyableParcels?: Parcel[];
-  myParcels?: Parcel[];
+  parcels: Parcel[];
+  userAddress?: string;
   onParcelSelect?: (parcelProperties: any) => void;
   testMode?: boolean;
   selectedMapTillerId: string | null;
   onMapTillerIdSelect: (mapTillerId: string | null) => void;
 }
 
+const ParcelColorPerType = {
+  minted: "#90EE90",
+  mintable: "#808080",
+  minted_buyable: "#006400",
+  invalid: "#ff0000",
+  my: "#0000ff",
+};
+
 const MapTillerView: React.FC<MapViewProps> = ({
   apiKey,
   center = [48.676165558055494, 1.9618325878575087].reverse(),
   zoom = 18,
-  whiteListedParcels = [],
-  mintableParcel = undefined,
-  mintedParcels = [],
-  invalidParcels = [],
-  buyableParcels = [],
-  myParcels = [],
+  parcels = [],
+  userAddress,
   onParcelSelect,
   testMode = false,
   selectedMapTillerId,
@@ -44,12 +44,30 @@ const MapTillerView: React.FC<MapViewProps> = ({
   const hoverPopupRef = useRef<HTMLDivElement>(null);
   const pinnedPopupRef = useRef<HTMLDivElement>(null);
 
-  const whiteListedParcelsIds = useMemo(() => whiteListedParcels.map((parcel) => parcel.mapTillerId), [whiteListedParcels]);
-  const mintedParcelsIds = useMemo(() => mintedParcels.map((parcel) => parcel.mapTillerId), [mintedParcels]);
-  const invalidParcelsIds = useMemo(() => invalidParcels.map((parcel) => parcel.mapTillerId), [invalidParcels]);
-  const buyableParcelsIds = useMemo(() => buyableParcels.map((parcel) => parcel.mapTillerId), [buyableParcels]);
-  const mintableParcelId = useMemo(() => mintableParcel?.mapTillerId, [mintableParcel]);
-  const myParcelsIds = useMemo(() => myParcels.map((parcel) => parcel.mapTillerId), [myParcels]);
+  // Organize parcels by type for efficient filtering
+  const parcelsByType = useMemo(() => {
+    const result = {
+      minted: [] as string[],
+      mintable: [] as string[],
+      minted_buyable: [] as string[],
+      invalid: [] as string[],
+      my: [] as string[],
+    };
+
+    parcels.forEach((parcel) => {
+      // Add to type-specific array
+      if (parcel.type && result[parcel.type as keyof typeof result]) {
+        result[parcel.type as keyof typeof result].push(parcel.mapTillerId);
+      }
+
+      // Also add to "my" if owned by user
+      if (userAddress && parcel.owner?.addressXRPL === userAddress) {
+        result.my.push(parcel.mapTillerId);
+      }
+    });
+
+    return result;
+  }, [parcels, userAddress]);
 
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
@@ -84,102 +102,20 @@ const MapTillerView: React.FC<MapViewProps> = ({
         url: `https://api.maptiler.com/tiles/fr-cadastre/tiles.json?key=${apiKey}`,
       });
 
-      // Add standard parcels layer
-      mapInstance.addLayer({
-        id: "cadastre-parcels-regular",
-        type: "fill",
-        source: "cadastre",
-        "source-layer": "parcelles",
-        paint: {
-          "fill-color": "#0080aa",
-          "fill-opacity": 0.5,
-          "fill-outline-color": "#000000",
-        },
-        filter: testMode ? ["!", ["in", ["get", "id"], ["literal", whiteListedParcelsIds]]] : ["==", "id", ""],
-      });
-
-      // Add whitelisted parcels layer
-      mapInstance.addLayer({
-        id: "cadastre-parcels-whitelisted",
-        type: "fill",
-        source: "cadastre",
-        "source-layer": "parcelles",
-        paint: {
-          "fill-color": "#00cc44",
-          "fill-opacity": 0.6,
-          "fill-outline-color": "#006622",
-        },
-        filter: testMode ? ["in", ["get", "id"], ["literal", whiteListedParcelsIds]] : ["==", "id", ""],
-      });
-
-      // Add minted parcels layer
-      mapInstance.addLayer({
-        id: "cadastre-parcels-minted",
-        type: "fill",
-        source: "cadastre",
-        "source-layer": "parcelles",
-        paint: {
-          "fill-color": "#90EE90",
-          "fill-opacity": 0.6,
-          "fill-outline-color": "#001a80",
-        },
-        filter: ["in", ["get", "id"], ["literal", mintedParcelsIds]],
-      });
-
-      // Add mintable parcels layer
-      mapInstance.addLayer({
-        id: "cadastre-parcels-mintable",
-        type: "fill",
-        source: "cadastre",
-        "source-layer": "parcelles",
-        paint: {
-          "fill-color": "#808080",
-          "fill-opacity": 0.3,
-          "fill-outline-color": "#660099",
-        },
-        filter: ["==", "id", mintableParcelId],
-      });
-
-      // Add buyable parcels layer
-      mapInstance.addLayer({
-        id: "cadastre-parcels-buyable",
-        type: "fill",
-        source: "cadastre",
-        "source-layer": "parcelles",
-        paint: {
-          "fill-color": "#006400",
-          "fill-opacity": 0.6,
-          "fill-outline-color": "#006622",
-        },
-        filter: ["in", ["get", "id"], ["literal", buyableParcelsIds]],
-      });
-
-      // Add invalid parcels layer
-      mapInstance.addLayer({
-        id: "cadastre-parcels-invalid",
-        type: "fill",
-        source: "cadastre",
-        "source-layer": "parcelles",
-        paint: {
-          "fill-color": "#ff0000",
-          "fill-opacity": 0.6,
-          "fill-outline-color": "#990000",
-        },
-        filter: ["in", ["get", "id"], ["literal", invalidParcelsIds]],
-      });
-
-      // Add invalid parcels layer
-      mapInstance.addLayer({
-        id: "cadastre-parcels-my",
-        type: "fill",
-        source: "cadastre",
-        "source-layer": "parcelles",
-        paint: {
-          "fill-color": "#0000ff",
-          "fill-opacity": 0.6,
-          "fill-outline-color": "#990000",
-        },
-        filter: ["in", ["get", "id"], ["literal", myParcelsIds]],
+      // Add layers for each parcel type
+      Object.entries(ParcelColorPerType).forEach(([type, color]) => {
+        mapInstance.addLayer({
+          id: `cadastre-parcels-${type}`,
+          type: "fill",
+          source: "cadastre",
+          "source-layer": "parcelles",
+          paint: {
+            "fill-color": color,
+            "fill-opacity": 0.6,
+            "fill-outline-color": "#000000",
+          },
+          filter: ["in", ["get", "id"], ["literal", parcelsByType[type as keyof typeof parcelsByType]]],
+        });
       });
 
       // Add hover effect layer
@@ -203,8 +139,8 @@ const MapTillerView: React.FC<MapViewProps> = ({
         source: "cadastre",
         "source-layer": "parcelles",
         paint: {
-          "fill-color": "#ff6600",
-          "fill-opacity": 0.7,
+          "fill-color": "#0080aa",
+          "fill-opacity": 0.8,
           "fill-outline-color": "#000000",
         },
         filter: ["==", "id", ""],
@@ -216,186 +152,141 @@ const MapTillerView: React.FC<MapViewProps> = ({
 
     const setupEventHandlers = (mapInstance: any) => {
       // Handle mouse move over parcels
-      mapInstance.on(
-        "mousemove",
-        [
-          "cadastre-parcels-regular",
-          "cadastre-parcels-whitelisted",
-          "cadastre-parcels-minted",
-          "cadastre-parcels-mintable",
-          "cadastre-parcels-buyable",
-          "cadastre-parcels-invalid",
-        ],
-        (e: any) => {
-          mapInstance.getCanvas().style.cursor = "pointer";
+      const layerIds = Object.keys(ParcelColorPerType).map((type) => `cadastre-parcels-${type}`);
 
-          const features = mapInstance.queryRenderedFeatures(e.point, {
-            layers: [
-              "cadastre-parcels-regular",
-              "cadastre-parcels-whitelisted",
-              "cadastre-parcels-minted",
-              "cadastre-parcels-mintable",
-              "cadastre-parcels-buyable",
-              "cadastre-parcels-invalid",
-            ],
-          });
+      // Handle mouse move over parcels
+      mapInstance.on("mousemove", layerIds, (e: any) => {
+        mapInstance.getCanvas().style.cursor = "pointer";
 
-          if (features.length > 0) {
-            const feature = features[0];
-            const props = feature.properties;
+        const features = mapInstance.queryRenderedFeatures(e.point, {
+          layers: layerIds,
+        });
 
-            // Don't apply hover effect if this parcel is already selected
-            if (selectedMapTillerId === props.id) {
-              return;
-            }
+        if (features.length > 0) {
+          const feature = features[0];
+          const props = feature.properties;
 
-            // Update hover state
-            if (hoveredParcelId !== props.id) {
-              // Remove highlight from previous feature
-              if (hoveredParcelId) {
-                mapInstance.setFilter("cadastre-parcels-highlighted", ["==", "id", ""]);
-              }
-
-              // Add highlight to current feature
-              setHoveredParcelId(props.id);
-              mapInstance.setFilter("cadastre-parcels-highlighted", ["==", "id", props.id]);
-
-              // Update popup content
-              if (hoverPopupRef.current) {
-                let popupContent = "";
-                for (const key in props) {
-                  if (Object.prototype.hasOwnProperty.call(props, key)) {
-                    popupContent += `<p><strong>${key}:</strong> ${props[key]}</p>`;
-                  }
-                }
-
-                hoverPopupRef.current.innerHTML = popupContent;
-                hoverPopupRef.current.style.display = "block";
-                hoverPopupRef.current.style.left = e.point.x + 10 + "px";
-                hoverPopupRef.current.style.top = e.point.y + 10 + "px";
-              }
-            }
+          // Don't apply hover effect if this parcel is already selected
+          if (selectedMapTillerId === props.id) {
+            return;
           }
-        }
-      );
 
-      // Handle mouse leave
-      mapInstance.on(
-        "mouseleave",
-        [
-          "cadastre-parcels-regular",
-          "cadastre-parcels-whitelisted",
-          "cadastre-parcels-minted",
-          "cadastre-parcels-mintable",
-          "cadastre-parcels-buyable",
-          "cadastre-parcels-invalid",
-        ],
-        () => {
-          mapInstance.getCanvas().style.cursor = "";
-          if (hoverPopupRef.current) {
-            hoverPopupRef.current.style.display = "none";
-          }
-          setHoveredParcelId(null);
-          mapInstance.setFilter("cadastre-parcels-highlighted", ["==", "id", ""]);
-        }
-      );
-
-      // Handle click events
-      mapInstance.on(
-        "click",
-        [
-          "cadastre-parcels-regular",
-          "cadastre-parcels-whitelisted",
-          "cadastre-parcels-minted",
-          "cadastre-parcels-mintable",
-          "cadastre-parcels-buyable",
-          "cadastre-parcels-invalid",
-          "cadastre-parcels-my",
-        ],
-        (e: any) => {
-          const features = mapInstance.queryRenderedFeatures(e.point, {
-            layers: [
-              "cadastre-parcels-regular",
-              "cadastre-parcels-whitelisted",
-              "cadastre-parcels-minted",
-              "cadastre-parcels-mintable",
-              "cadastre-parcels-buyable",
-              "cadastre-parcels-invalid",
-            ],
-          });
-
-          if (features.length > 0) {
-            const feature = features[0];
-            const props = feature.properties;
-
-            console.log("🚀 ~ setupEventHandlers ~ feature:", feature);
-
-            // If clicking the already selected parcel, deselect it
-            if (selectedMapTillerId === props.id) {
-              onMapTillerIdSelect(null);
-              mapInstance.setFilter("cadastre-parcels-selected", ["==", "id", ""]);
-              if (pinnedPopupRef.current) {
-                pinnedPopupRef.current.style.display = "none";
-              }
-
-              // Notify parent component of deselection
-              if (onParcelSelect) {
-                onParcelSelect(null);
-              }
-              return;
+          // Update hover state
+          if (hoveredParcelId !== props.id) {
+            // Remove highlight from previous feature
+            if (hoveredParcelId) {
+              mapInstance.setFilter("cadastre-parcels-highlighted", ["==", "id", ""]);
             }
 
-            // Select the new parcel
-            onMapTillerIdSelect(props.id);
-            mapInstance.setFilter("cadastre-parcels-selected", ["==", "id", props.id]);
+            // Add highlight to current feature
+            setHoveredParcelId(props.id);
+            mapInstance.setFilter("cadastre-parcels-highlighted", ["==", "id", props.id]);
 
-            // Clear hover state
-            setHoveredParcelId(null);
-            mapInstance.setFilter("cadastre-parcels-highlighted", ["==", "id", ""]);
+            // Update popup content
             if (hoverPopupRef.current) {
-              hoverPopupRef.current.style.display = "none";
-            }
-
-            // Update and show the pinned popup
-            if (pinnedPopupRef.current) {
-              let popupContent = '<div class="close-button">×</div>';
+              let popupContent = "";
               for (const key in props) {
                 if (Object.prototype.hasOwnProperty.call(props, key)) {
                   popupContent += `<p><strong>${key}:</strong> ${props[key]}</p>`;
                 }
               }
 
-              pinnedPopupRef.current.innerHTML = popupContent;
-              pinnedPopupRef.current.style.display = "block";
-              pinnedPopupRef.current.style.left = e.point.x + 10 + "px";
-              pinnedPopupRef.current.style.top = e.point.y + 10 + "px";
-
-              // Reattach close button event
-              const closeButton = pinnedPopupRef.current.querySelector(".close-button");
-              if (closeButton && closeButton instanceof HTMLElement) {
-                closeButton.addEventListener("click", (event: MouseEvent) => {
-                  event.stopPropagation();
-                  if (pinnedPopupRef.current) {
-                    pinnedPopupRef.current.style.display = "none";
-                  }
-                  onMapTillerIdSelect(null);
-                  mapInstance.setFilter("cadastre-parcels-selected", ["==", "id", ""]);
-
-                  // Notify parent component of deselection
-                  if (onParcelSelect) {
-                    onParcelSelect(null);
-                  }
-                });
-              }
-            }
-
-            // Notify parent component of selection
-            if (onParcelSelect) {
-              onParcelSelect(props);
+              hoverPopupRef.current.innerHTML = popupContent;
+              hoverPopupRef.current.style.display = "block";
+              hoverPopupRef.current.style.left = e.point.x + 10 + "px";
+              hoverPopupRef.current.style.top = e.point.y + 10 + "px";
             }
           }
         }
-      );
+      });
+
+      // Handle mouse leave
+      mapInstance.on("mouseleave", layerIds, () => {
+        mapInstance.getCanvas().style.cursor = "";
+        if (hoverPopupRef.current) {
+          hoverPopupRef.current.style.display = "none";
+        }
+        setHoveredParcelId(null);
+        mapInstance.setFilter("cadastre-parcels-highlighted", ["==", "id", ""]);
+      });
+
+      // Handle click events
+      mapInstance.on("click", layerIds, (e: any) => {
+        const features = mapInstance.queryRenderedFeatures(e.point, {
+          layers: layerIds,
+        });
+
+        if (features.length > 0) {
+          const feature = features[0];
+          const props = feature.properties;
+
+          console.log("🚀 ~ setupEventHandlers ~ feature:", feature);
+
+          // If clicking the already selected parcel, deselect it
+          if (selectedMapTillerId === props.id) {
+            onMapTillerIdSelect(null);
+            mapInstance.setFilter("cadastre-parcels-selected", ["==", "id", ""]);
+            if (pinnedPopupRef.current) {
+              pinnedPopupRef.current.style.display = "none";
+            }
+
+            // Notify parent component of deselection
+            if (onParcelSelect) {
+              onParcelSelect(null);
+            }
+            return;
+          }
+
+          // Select the new parcel
+          onMapTillerIdSelect(props.id);
+          mapInstance.setFilter("cadastre-parcels-selected", ["==", "id", props.id]);
+
+          // Clear hover state
+          setHoveredParcelId(null);
+          mapInstance.setFilter("cadastre-parcels-highlighted", ["==", "id", ""]);
+          if (hoverPopupRef.current) {
+            hoverPopupRef.current.style.display = "none";
+          }
+
+          // Update and show the pinned popup
+          if (pinnedPopupRef.current) {
+            let popupContent = '<div class="close-button">×</div>';
+            for (const key in props) {
+              if (Object.prototype.hasOwnProperty.call(props, key)) {
+                popupContent += `<p><strong>${key}:</strong> ${props[key]}</p>`;
+              }
+            }
+
+            pinnedPopupRef.current.innerHTML = popupContent;
+            pinnedPopupRef.current.style.display = "block";
+            pinnedPopupRef.current.style.left = e.point.x + 10 + "px";
+            pinnedPopupRef.current.style.top = e.point.y + 10 + "px";
+
+            // Reattach close button event
+            const closeButton = pinnedPopupRef.current.querySelector(".close-button");
+            if (closeButton && closeButton instanceof HTMLElement) {
+              closeButton.addEventListener("click", (event: MouseEvent) => {
+                event.stopPropagation();
+                if (pinnedPopupRef.current) {
+                  pinnedPopupRef.current.style.display = "none";
+                }
+                onMapTillerIdSelect(null);
+                mapInstance.setFilter("cadastre-parcels-selected", ["==", "id", ""]);
+
+                // Notify parent component of deselection
+                if (onParcelSelect) {
+                  onParcelSelect(null);
+                }
+              });
+            }
+          }
+
+          // Notify parent component of selection
+          if (onParcelSelect) {
+            onParcelSelect(props);
+          }
+        }
+      });
     };
 
     initializeMap();
@@ -409,18 +300,32 @@ const MapTillerView: React.FC<MapViewProps> = ({
     };
   }, []);
 
-  // Effect to update the whitelisted parcels when the prop changes
+  // Update map layers when parcels change
   useEffect(() => {
     if (!map.current || !map.current.isStyleLoaded()) return;
 
-    // Update the filters for the parcel layers
-    map.current.setFilter("cadastre-parcels-regular", testMode ? ["!", ["in", ["get", "id"], ["literal", whiteListedParcelsIds]]] : ["==", "id", ""]);
-    map.current.setFilter("cadastre-parcels-whitelisted", ["in", ["get", "id"], ["literal", whiteListedParcelsIds]]);
-    map.current.setFilter("cadastre-parcels-minted", ["in", ["get", "id"], ["literal", mintedParcelsIds]]);
-    map.current.setFilter("cadastre-parcels-mintable", ["==", "id", mintableParcelId]);
-    map.current.setFilter("cadastre-parcels-buyable", ["in", ["get", "id"], ["literal", buyableParcelsIds]]);
-    map.current.setFilter("cadastre-parcels-invalid", ["in", ["get", "id"], ["literal", invalidParcelsIds]]);
-  }, [whiteListedParcels, mintedParcels, mintableParcel, buyableParcels, invalidParcels]);
+    // Update the filters for all parcel type layers
+    Object.keys(ParcelColorPerType).forEach((type) => {
+      const layerId = `cadastre-parcels-${type}`;
+      map.current.setFilter(layerId, ["in", ["get", "id"], ["literal", parcelsByType[type as keyof typeof parcelsByType]]]);
+    });
+
+    // If there's a selected parcel, make sure it stays selected
+    if (selectedMapTillerId) {
+      map.current.setFilter("cadastre-parcels-selected", ["==", "id", selectedMapTillerId]);
+    }
+  }, [parcelsByType, selectedMapTillerId]);
+
+  // Update selected parcel highlight when selection changes
+  useEffect(() => {
+    if (!map.current || !map.current.isStyleLoaded()) return;
+
+    if (selectedMapTillerId) {
+      map.current.setFilter("cadastre-parcels-selected", ["==", "id", selectedMapTillerId]);
+    } else {
+      map.current.setFilter("cadastre-parcels-selected", ["==", "id", ""]);
+    }
+  }, [selectedMapTillerId]);
 
   return (
     <div style={{ position: "relative", width: "100%", height: "100%" }}>

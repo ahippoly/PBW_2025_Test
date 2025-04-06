@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "../ui/button";
 import { Separator } from "../ui/separator";
-import MintedParcelContent from "./MintedParcelContent";
+import MintedParcelContent from "./Mint/MintedParcelContent";
 import NoParcelSelected from "./NoParcelSelected";
 import MintableParcelContent from "./MintableParcelContent";
 import InvalidParcelContent from "./InvalidParcelContent";

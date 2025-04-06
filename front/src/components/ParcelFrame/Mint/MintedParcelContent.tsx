@@ -1,7 +1,6 @@
-import { Button } from "../ui/button";
-import { CardHeader } from "../ui/card";
-import { CardContent } from "../ui/card";
-import { Separator } from "../ui/separator";
+import { Button } from "@/components/ui/button";
+import { CardHeader, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 
 interface MintedParcelContentProps {
   parcel: Parcel;
